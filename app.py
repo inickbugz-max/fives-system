@@ -2,10 +2,13 @@ from flask import Flask, render_template
 
 app = Flask(__name__)
 
+# 🔥 HOME = DASHBOARD (MAIN SYSTEM PAGE)
 @app.route('/')
 def home():
-    return render_template('monthly.html')
+    return render_template('dashboard.html')
 
+
+# 🔹 CORE PAGES
 @app.route('/monthly')
 def monthly():
     return render_template('monthly.html')
@@ -26,6 +29,8 @@ def calendar():
 def receipt():
     return render_template('receipt.html')
 
+
+# 🔹 SYSTEM PAGES
 @app.route('/dashboard')
 def dashboard():
     return render_template('dashboard.html')
@@ -34,6 +39,8 @@ def dashboard():
 def login():
     return render_template('login.html')
 
+
+# 🔹 FOOTBALL MANAGEMENT
 @app.route('/league')
 def league():
     return render_template('league.html')
@@ -50,6 +57,8 @@ def fixtures():
 def player():
     return render_template('player.html')
 
+
+# 🔹 REPORTS
 @app.route('/reports')
 def reports():
     return render_template('reports.html')
@@ -71,6 +80,6 @@ def refs():
     return render_template('refs.html')
 
 
-# Required for local run (Render uses gunicorn)
+# 🔥 REQUIRED FOR LOCAL RUN
 if __name__ == "__main__":
     app.run(debug=True)
