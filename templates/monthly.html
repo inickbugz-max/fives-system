@@ -1,17 +1,77 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Monthly</title>
-    <link rel="stylesheet" href="/static/style.css">
+    <title>Monthly Bookings</title>
+    <style>
+        body {
+            font-family: Arial;
+            background: #0f172a;
+            color: white;
+            text-align: center;
+        }
+
+        h1 {
+            margin-top: 20px;
+        }
+
+        form {
+            margin: 20px auto;
+        }
+
+        input, button {
+            padding: 10px;
+            margin: 5px;
+            border-radius: 6px;
+            border: none;
+        }
+
+        button {
+            background: #22c55e;
+            color: white;
+            cursor: pointer;
+        }
+
+        table {
+            margin: 20px auto;
+            border-collapse: collapse;
+            width: 80%;
+        }
+
+        th, td {
+            padding: 10px;
+            border-bottom: 1px solid #444;
+        }
+    </style>
 </head>
 
 <body>
 
-<h1>📊 Monthly Page</h1>
+<h1>📅 Monthly Bookings</h1>
 
-<p>This page will show bookings soon.</p>
+<!-- ✅ BOOKING FORM -->
+<form method="POST">
+    <input type="text" name="name" placeholder="Name" required>
+    <input type="date" name="date" required>
+    <input type="time" name="time" required>
+    <button type="submit">Add Booking</button>
+</form>
 
-<a href="/">⬅ Back to Dashboard</a>
+<!-- ✅ BOOKINGS TABLE -->
+<table>
+    <tr>
+        <th>Name</th>
+        <th>Date</th>
+        <th>Time</th>
+    </tr>
+
+    {% for booking in bookings %}
+    <tr>
+        <td>{{ booking.name }}</td>
+        <td>{{ booking.date }}</td>
+        <td>{{ booking.time }}</td>
+    </tr>
+    {% endfor %}
+</table>
 
 </body>
 </html>
