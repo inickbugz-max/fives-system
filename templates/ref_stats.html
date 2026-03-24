@@ -2,36 +2,16 @@
 <html>
 <head>
     <title>Ref Stats</title>
+    <link rel="stylesheet" href="/static/style.css">
 </head>
 
-<body style="background:#0f172a; color:white; font-family:Arial; padding:20px;">
+<body>
 
-<h2>🧑‍⚖️ Referee Stats</h2>
+<h1>🧑‍⚖️ Ref Stats</h1>
 
-<a href="/dashboard" style="color:lightgreen;">← Back to Dashboard</a>
+<p>No data available yet.</p>
 
-<h3>Total Matches Per Ref</h3>
-
-{% for ref, count in ref_data.items() %}
-<div style="background:#1e293b; padding:10px; margin:10px; border-radius:10px;">
-    <b>{{ ref }}</b><br>
-    Matches: {{ count }}
-</div>
-{% endfor %}
-
-<h3>📅 Monthly Breakdown</h3>
-
-{% for ref, months in monthly_data.items() %}
-<div style="background:#1e293b; padding:10px; margin:10px; border-radius:10px;">
-    <b>{{ ref }}</b>
-
-    <ul>
-        {% for month, count in months.items() %}
-        <li>{{ month }} → {{ count }} matches</li>
-        {% endfor %}
-    </ul>
-</div>
-{% endfor %}
+<a href="/">⬅ Back to Dashboard</a>
 
 </body>
 </html>
