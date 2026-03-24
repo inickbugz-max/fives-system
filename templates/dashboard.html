@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Dashboard</title>
+
+    <style>
+        body {
+            background:#0f172a;
+            color:white;
+            font-family:Arial;
+            padding:20px;
+        }
+
+        .topbar {
+            display:flex;
+            justify-content:space-between;
+            margin-bottom:20px;
+        }
+
+        .topbar a {
+            margin-right:15px;
+            text-decoration:none;
+            font-weight:bold;
+        }
+
+        .grid {
+            display:grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap:20px;
+        }
+
+        .cell {
+            background:#1e293b;
+            padding:10px;
+            border-radius:10px;
+        }
+
+        input {
+            width:100%;
+            padding:5px;
+            margin:3px 0;
+        }
+
+        button {
+            width:100%;
+            padding:8px;
+            background:#22c55e;
+            border:none;
+            color:white;
+            font-weight:bold;
+            cursor:pointer;
+        }
+
+        .time {
+            margin:15px 0 5px;
+            font-weight:bold;
+        }
+    </style>
+</head>
+
+<body>
+
+<!-- 🔥 TOP NAVIGATION -->
+<div class="topbar">
+    <div>
+        <a href="/dashboard" style="color:lightgreen;">🏠 Dashboard</a>
+        <a href="/billing" style="color:lightblue;">💰 Billing</a>
+        <a href="/bulk_reminder" style="color:orange;">📲 Bulk</a>
+        <a href="/league" style="color:yellow;">⚽ League</a>
+        <a href="/ref_stats" style="color:cyan;">🧑‍⚖️ Ref Stats</a>
+        <a href="/standings" style="color:gold;">🏆 Standings</a>
+        <a href="/monthly" style="color:lightgreen;">📊 Monthly</a>
+    </div>
+
+    <div>
+        <a href="/logout" style="color:red;">Logout</a>
+    </div>
+</div>
+
+<h2>📊 Booking Dashboard</h2>
+
+{% for time in times %}
+<div class="time">{{ time }}</div>
+
+<div class="grid">
+
+    {% for court in courts %}
+    <div class="cell">
+
+        <b>{{ court }}</b>
+
+        <form method="POST" action="/add">
+
+            <input type="hidden" name="time" value="{{ time }}">
+            <input type="hidden" name="court" value="{{ court }}">
+
+            <input name="name" placeholder="Name" required>
+            <input name="phone" placeholder="Phone (277...)" required>
+            <input name="amount" placeholder="Amount" required>
+
+            <button>Book</button>
+        </form>
+
+    </div>
+    {% endfor %}
+
+</div>
+{% endfor %}
+
+</body>
+</html>

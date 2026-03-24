@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Analytics</title>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+body {
+    background:#0f172a;
+    color:white;
+    padding:20px;
+    font-family:Arial;
+}
+
+canvas {
+    background:white;
+    margin:20px 0;
+    padding:10px;
+    border-radius:10px;
+}
+</style>
+
+</head>
+
+<body>
+
+<h2>📊 Analytics</h2>
+<a href="/">⬅ Back</a>
+
+<h3>Daily Revenue</h3>
+<canvas id="dailyChart"></canvas>
+
+<h3>Monthly Revenue</h3>
+<canvas id="monthlyChart"></canvas>
+
+<script>
+
+const dailyLabels = {{ daily_labels | tojson }};
+const dailyValues = {{ daily_values | tojson }};
+
+const monthlyLabels = {{ monthly_labels | tojson }};
+const monthlyValues = {{ monthly_values | tojson }};
+
+new Chart(document.getElementById("dailyChart"), {
+    type: 'line',
+    data: {
+        labels: dailyLabels,
+        datasets: [{
+            label: 'Daily Revenue',
+            data: dailyValues
+        }]
+    }
+});
+
+new Chart(document.getElementById("monthlyChart"), {
+    type: 'bar',
+    data: {
+        labels: monthlyLabels,
+        datasets: [{
+            label: 'Monthly Revenue',
+            data: monthlyValues
+        }]
+    }
+});
+
+</script>
+
+</body>
+</html>

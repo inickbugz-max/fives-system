@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Fixtures</title>
+<style>
+body { background:#0f172a; color:white; font-family:Arial; padding:20px; }
+.card { background:#1e293b; padding:15px; margin-bottom:10px; border-radius:8px; }
+</style>
+</head>
+
+<body>
+
+<h2>⚽ Fixtures & Results</h2>
+<a href="/">⬅ Back</a>
+
+<h3>Add Game</h3>
+
+<form method="POST" action="/add_fixture">
+<input name="teamA" placeholder="Team A">
+<input name="teamB" placeholder="Team B">
+<input name="scoreA" placeholder="Score A">
+<input name="scoreB" placeholder="Score B">
+<input name="ref" placeholder="Referee">
+<button>Add</button>
+</form>
+
+<hr>
+
+{% for g in games %}
+<div class="card">
+{{ g[1] }} {{ g[3] }} - {{ g[4] }} {{ g[2] }}<br>
+Ref: {{ g[5] }}<br>
+Date: {{ g[6] }}
+</div>
+{% endfor %}
+
+</body>
+</html>

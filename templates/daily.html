@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Daily Report</title>
+</head>
+<body>
+
+<h1>📅 Daily Report ({{ date }})</h1>
+<a href="/">Back</a>
+
+<h3>Total: R{{ total }}</h3>
+
+<ul>
+{% for b in bookings %}
+<li>{{ b[2] }} vs {{ b[3] }} - R{{ b[7] }}</li>
+{% endfor %}
+</ul>
+
+</body>
+</html>

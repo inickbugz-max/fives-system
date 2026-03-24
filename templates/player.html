@@ -1,0 +1,300 @@
+from flask import Flask, render_template, request, redirect, session, send_file
+import sqlite3
+from datetime import datetime
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
+from reportlab.lib.styles import getSampleStyleSheet
+
+app = Flask(__name__)
+app.secret_key = "secret123"
+
+# -----------------------------
+# DATABASE INIT
+# -----------------------------
+def init_db():
+    conn = sqlite3.connect("database.db")
+    c = conn.cursor()
+
+    c.execute("""
+    CREATE TABLE IF NOT EXISTS bookings (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        player_name TEXT,
+        time TEXT,
+        court TEXT,
+        price REAL,
+        paid REAL DEFAULT 0
+    )
+    """)
+
+    c.execute("""
+    CREATE TABLE IF NOT EXISTS payments (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        booking_id INTEGER,
+        player_name TEXT,
+        amount REAL,
+        method TEXT,
+        date TEXT
+    )
+    """)
+
+    conn.commit()
+    conn.close()
+
+init_db()
+
+# -----------------------------
+# LOGIN
+# -----------------------------
+@app.route("/", methods=["GET", "POST"])
+def login():
+    if request.method == "POST":
+        session["user"] = request.form["username"]
+        return redirect("/dashboard")
+    return render_template("login.html")
+
+# -----------------------------
+# LOGOUT
+# -----------------------------
+@app.route("/logout")
+def logout():
+    session.clear()
+    return redirect("/")
+
+# -----------------------------
+# DASHBOARD (PROTECTED)
+# -----------------------------
+@app.route("/dashboard")
+def dashboard():
+    if "user" not in session:
+        return redirect("/")
+
+    conn = sqlite3.connect("database.db")
+    c = conn.cursor()
+
+    bookings = c.execute("SELECT * FROM bookings").fetchall()
+    payments = c.execute("SELECT * FROM payments").fetchall()
+
+    total_revenue = sum([p[3] for p in payments]) if payments else 0
+
+    schedule = {}
+    times = [
+        "07:00","08:00","09:00","10:00","11:00",
+        "12:00","13:00","14:00","15:00","16:00",
+        "17:00","18:00","19:00","20:00"
+    ]
+    courts = ["Court 1", "Court 2", "Court 3"]
+
+    for t in times:
+        schedule[t] = {}
+        for c_name in courts:
+            schedule[t][c_name] = None
+
+    for b in bookings:
+        try:
+            schedule[b[2]][b[3]] = b
+        except:
+            pass
+
+    conn.close()
+
+    return render_template(
+        "dashboard.html",
+        schedule=schedule,
+        revenue=total_revenue,
+        user=session["user"]
+    )
+
+# -----------------------------
+# ADD BOOKING
+# -----------------------------
+@app.route("/add", methods=["POST"])
+def add_booking():
+    if "user" not in session:
+        return redirect("/")
+
+    player = request.form["player"]
+    time = request.form["time"]
+    court = request.form["court"]
+    price = float(request.form["price"])
+
+    conn = sqlite3.connect("database.db")
+    c = conn.cursor()
+
+    c.execute("""
+        INSERT INTO bookings (player_name, time, court, price, paid)
+        VALUES (?, ?, ?, ?, 0)
+    """, (player, time, court, price))
+
+    conn.commit()
+    conn.close()
+
+    return redirect("/dashboard")
+
+# -----------------------------
+# PAYMENT
+# -----------------------------
+@app.route("/pay/<int:id>", methods=["POST"])
+def pay(id):
+    if "user" not in session:
+        return redirect("/")
+
+    conn = sqlite3.connect("database.db")
+    c = conn.cursor()
+
+    player = request.form.get("player")
+    amount = float(request.form.get("amount"))
+    method = request.form.get("method")
+
+    c.execute("""
+        INSERT INTO payments (booking_id, player_name, amount, method, date)
+        VALUES (?, ?, ?, ?, ?)
+    """, (
+        id,
+        player,
+        amount,
+        method,
+        datetime.now().strftime("%Y-%m-%d")
+    ))
+
+    c.execute(
+        "UPDATE bookings SET paid = paid + ? WHERE id=?",
+        (amount, id)
+    )
+
+    conn.commit()
+    conn.close()
+
+    return redirect("/dashboard")
+
+# -----------------------------
+# BILLING
+# -----------------------------
+@app.route("/billing")
+def billing():
+    if "user" not in session:
+        return redirect("/")
+
+    conn = sqlite3.connect("database.db")
+    c = conn.cursor()
+
+    bookings = c.execute("SELECT * FROM bookings").fetchall()
+
+    total_outstanding = 0
+    total_collected = 0
+    data = []
+
+    for b in bookings:
+        player = b[1]
+        price = b[4]
+        paid = b[5]
+        balance = price - paid
+
+        total_outstanding += max(balance, 0)
+        total_collected += paid
+
+        if paid >= price:
+            status = "PAID"
+        elif paid > 0:
+            status = "PARTIAL"
+        else:
+            status = "OWING"
+
+        data.append({
+            "player": player,
+            "price": price,
+            "paid": paid,
+            "balance": balance,
+            "status": status
+        })
+
+    conn.close()
+
+    return render_template(
+        "billing.html",
+        data=data,
+        total_outstanding=total_outstanding,
+        total_collected=total_collected
+    )
+
+# -----------------------------
+# PLAYER
+# -----------------------------
+@app.route("/player/<name>")
+def player(name):
+    if "user" not in session:
+        return redirect("/")
+
+    conn = sqlite3.connect("database.db")
+    c = conn.cursor()
+
+    bookings = c.execute(
+        "SELECT * FROM bookings WHERE player_name=?",
+        (name,)
+    ).fetchall()
+
+    payments = c.execute(
+        "SELECT * FROM payments WHERE player_name=?",
+        (name,)
+    ).fetchall()
+
+    total_paid = sum([p[3] for p in payments]) if payments else 0
+    total_price = sum([b[4] for b in bookings]) if bookings else 0
+    balance = total_price - total_paid
+
+    conn.close()
+
+    return render_template(
+        "player.html",
+        name=name,
+        bookings=bookings,
+        payments=payments,
+        total_paid=total_paid,
+        total_price=total_price,
+        balance=balance
+    )
+
+# -----------------------------
+# PDF INVOICE
+# -----------------------------
+@app.route("/invoice/<name>")
+def invoice(name):
+    if "user" not in session:
+        return redirect("/")
+
+    conn = sqlite3.connect("database.db")
+    c = conn.cursor()
+
+    bookings = c.execute("SELECT * FROM bookings WHERE player_name=?", (name,)).fetchall()
+    payments = c.execute("SELECT * FROM payments WHERE player_name=?", (name,)).fetchall()
+
+    total_paid = sum([p[3] for p in payments]) if payments else 0
+    total_price = sum([b[4] for b in bookings]) if bookings else 0
+    balance = total_price - total_paid
+
+    conn.close()
+
+    file_path = f"{name}_invoice.pdf"
+
+    doc = SimpleDocTemplate(file_path)
+    styles = getSampleStyleSheet()
+    content = []
+
+    content.append(Paragraph(f"Invoice for {name}", styles["Title"]))
+    content.append(Spacer(1, 10))
+    content.append(Paragraph(f"Total Price: R{total_price}", styles["Normal"]))
+    content.append(Paragraph(f"Total Paid: R{total_paid}", styles["Normal"]))
+    content.append(Paragraph(f"Balance: R{balance}", styles["Normal"]))
+    content.append(Spacer(1, 20))
+    content.append(Paragraph("Payments:", styles["Heading2"]))
+
+    for p in payments:
+        content.append(Paragraph(f"R{p[3]} - {p[4]} - {p[5]}", styles["Normal"]))
+
+    doc.build(content)
+
+    return send_file(file_path, as_attachment=True)
+
+# -----------------------------
+# RUN
+# -----------------------------
+if __name__ == "__main__":
+    app.run(debug=True)

@@ -1,0 +1,19 @@
+<h1>Match Results</h1>
+
+<a href="/">⬅ Back</a>
+
+<form method="POST" action="/add_game">
+<input name="team_a" placeholder="Team A">
+<input name="score_a" placeholder="Score">
+<input name="team_b" placeholder="Team B">
+<input name="score_b" placeholder="Score">
+<button>Add</button>
+</form>
+
+<hr>
+
+{% for g in games %}
+<div>
+{{g[1]}} {{g[3]}} - {{g[4]}} {{g[2]}}
+</div>
+{% endfor %}

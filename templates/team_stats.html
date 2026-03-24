@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+
+<body>
+
+<div class="navbar">
+📊 Team Stats |
+<a href="/">Back</a>
+</div>
+
+<div class="container">
+
+<h1>Team Stats</h1>
+
+{% for team, stats in teams.items() %}
+
+<div class="card {% if stats.status == 'COMPLETE' %}complete{% else %}incomplete{% endif %}">
+
+<h3>{{ team }}</h3>
+
+<p>Games: {{ stats.played }}</p>
+<p>Scored: {{ stats.scored }}</p>
+<p>Conceded: {{ stats.conceded }}</p>
+
+<p>
+{% if stats.status == "COMPLETE" %}
+✅ Complete
+{% else %}
+⚠️ Incomplete
+{% endif %}
+</p>
+
+</div>
+
+{% endfor %}
+
+</div>
+
+</body>
+</html>

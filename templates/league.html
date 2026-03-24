@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>League</title>
+</head>
+
+<body style="background:#0f172a; color:white; font-family:Arial; padding:20px;">
+
+<h2>⚽ League Matches</h2>
+
+<a href="/dashboard" style="color:lightgreen;">← Back</a>
+
+<h3>Add Match</h3>
+<form method="POST" action="/add_match">
+    <input name="team_a" placeholder="Team A" required>
+    <input name="team_b" placeholder="Team B" required>
+    <input name="court" placeholder="Court" required>
+    <input name="time" placeholder="Time" required>
+    <input name="ref" placeholder="Referee" required>
+    <button>Add Match</button>
+</form>
+
+<h3>Matches</h3>
+
+{% for m in matches %}
+<div style="margin:10px; padding:10px; background:#1e293b; border-radius:10px;">
+    <b>{{ m[1] }} vs {{ m[2] }}</b><br>
+    Score: {{ m[3] }} - {{ m[4] }}<br>
+    Court: {{ m[5] }} | Time: {{ m[6] }}<br>
+    Ref: {{ m[7] }}
+
+    <form method="POST" action="/update_score/{{ m[0] }}">
+        <input name="score_a" placeholder="A">
+        <input name="score_b" placeholder="B">
+        <button>Update</button>
+    </form>
+</div>
+{% endfor %}
+
+</body>
+</html>

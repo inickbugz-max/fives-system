@@ -1,0 +1,15 @@
+<h2>Refs</h2>
+
+<form method="POST">
+<input name="team1">
+<input name="team2">
+<input name="time">
+<input name="ref">
+<button>Add</button>
+</form>
+
+{% for g in games %}
+<p>{{g[1]}} vs {{g[2]}} | {{g[3]}} | {{g[4]}}</p>
+{% endfor %}
+
+<a href="/">Back</a>

@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Reports</title>
+
+<style>
+body {
+    background:#0f172a;
+    color:white;
+    font-family:Arial;
+    padding:20px;
+}
+
+table {
+    width:100%;
+    border-collapse:collapse;
+    margin-top:20px;
+}
+
+td, th {
+    border:1px solid #1e293b;
+    padding:10px;
+    text-align:center;
+}
+
+th {
+    background:#1e293b;
+}
+
+.top {
+    margin-bottom:20px;
+}
+
+a {
+    color:#38bdf8;
+    margin-right:10px;
+}
+</style>
+
+</head>
+
+<body>
+
+<h2>📊 Reports</h2>
+
+<div class="top">
+<a href="/">⬅ Back</a>
+<a href="/export">⬇ Export CSV</a>
+</div>
+
+<table>
+<tr>
+<th>Name</th>
+<th>Time</th>
+<th>Court</th>
+<th>Total</th>
+<th>Paid</th>
+<th>Remaining</th>
+</tr>
+
+{% for r in data %}
+<tr>
+<td>{{r.name}}</td>
+<td>{{r.time}}</td>
+<td>{{r.court}}</td>
+<td>R{{r.total}}</td>
+<td>R{{r.paid}}</td>
+<td>R{{r.remaining}}</td>
+</tr>
+{% endfor %}
+
+</table>
+
+</body>
+</html>

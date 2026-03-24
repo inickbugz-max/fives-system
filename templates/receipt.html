@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Receipt</title>
+<style>
+body { font-family:Arial; padding:20px; }
+</style>
+</head>
+
+<body>
+
+<h2>🧾 Receipt</h2>
+
+<p><strong>Booking:</strong> {{ booking[1] }}</p>
+<p><strong>Total:</strong> R{{ booking[6] }}</p>
+<p><strong>Paid:</strong> R{{ booking[7] }}</p>
+<p><strong>Date:</strong> {{ booking[8] }}</p>
+
+<hr>
+
+<h3>Payments</h3>
+
+{% for p in payments %}
+<p>{{ p[2] }} paid R{{ p[3] }}</p>
+{% endfor %}
+
+<br>
+<button onclick="window.print()">🖨 Print</button>
+
+</body>
+</html>

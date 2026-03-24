@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Billing</title>
+
+    <style>
+        body {
+            background:#0f172a;
+            color:white;
+            font-family:Arial;
+            padding:20px;
+        }
+
+        table {
+            width:100%;
+            border-collapse:collapse;
+            margin-top:20px;
+        }
+
+        th, td {
+            padding:10px;
+            border-bottom:1px solid #334155;
+            text-align:left;
+        }
+
+        .paid { color:#22c55e; }
+        .partial { color:#eab308; }
+        .owing { color:#ef4444; }
+
+        .top {
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+        }
+
+        a {
+            text-decoration:none;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="top">
+    <h2>💰 Billing Dashboard</h2>
+    <a href="/dashboard" style="color:lightgreen;">← Back</a>
+</div>
+
+<h3>Total Collected: R{{ total_collected }}</h3>
+<h3>Total Outstanding: R{{ total_outstanding }}</h3>
+
+<table>
+    <tr>
+        <th>Player</th>
+        <th>Total</th>
+        <th>Paid</th>
+        <th>Balance</th>
+        <th>Status</th>
+    </tr>
+
+    {% for row in data %}
+    <tr>
+
+        <!-- 🔥 CLICKABLE PLAYER -->
+        <td>
+            <a href="/player/{{ row.player }}" style="color:lightblue;">
+                {{ row.player }}
+            </a>
+        </td>
+
+        <td>R{{ row.price }}</td>
+        <td>R{{ row.paid }}</td>
+        <td>R{{ row.balance }}</td>
+
+        {% if row.status == "PAID" %}
+            <td class="paid">PAID</td>
+        {% elif row.status == "PARTIAL" %}
+            <td class="partial">PARTIAL</td>
+        {% else %}
+            <td class="owing">OWING</td>
+        {% endif %}
+
+    </tr>
+    {% endfor %}
+
+</table>
+
+</body>
+</html>

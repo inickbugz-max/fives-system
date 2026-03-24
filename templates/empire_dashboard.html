@@ -1,0 +1,199 @@
+from flask import Flask, render_template, request, redirect, session
+import sqlite3
+from datetime import date
+
+app = Flask(__name__)
+app.secret_key = "empire_secret"
+
+def db():
+    return sqlite3.connect("database.db")
+
+def init():
+    conn = db()
+    c = conn.cursor()
+
+    # USERS
+    c.execute("""CREATE TABLE IF NOT EXISTS users (
+        id INTEGER PRIMARY KEY,
+        username TEXT,
+        password TEXT,
+        role TEXT
+    )""")
+
+    # BOOKINGS
+    c.execute("""CREATE TABLE IF NOT EXISTS bookings (
+        id INTEGER PRIMARY KEY,
+        name TEXT,
+        players TEXT,
+        time TEXT,
+        court TEXT,
+        amount REAL,
+        date TEXT,
+        created_by TEXT
+    )""")
+
+    # PAYMENTS
+    c.execute("""CREATE TABLE IF NOT EXISTS payments (
+        id INTEGER PRIMARY KEY,
+        booking_id INTEGER,
+        amount REAL,
+        method TEXT,
+        created_by TEXT
+    )""")
+
+    # AUDIT LOG
+    c.execute("""CREATE TABLE IF NOT EXISTS logs (
+        id INTEGER PRIMARY KEY,
+        action TEXT,
+        user TEXT,
+        info TEXT,
+        date TEXT
+    )""")
+
+    # DEFAULT ADMIN
+    if not c.execute("SELECT * FROM users WHERE username='admin'").fetchone():
+        c.execute("INSERT INTO users VALUES (NULL,'admin','1234','admin')")
+
+    conn.commit()
+    conn.close()
+
+init()
+
+# 🔐 LOGIN
+@app.route("/login", methods=["GET","POST"])
+def login():
+    if request.method == "POST":
+        conn = db()
+        c = conn.cursor()
+
+        user = c.execute("SELECT * FROM users WHERE username=? AND password=?",
+            (request.form["username"], request.form["password"])
+        ).fetchone()
+
+        conn.close()
+
+        if user:
+            session["user"] = user[1]
+            session["role"] = user[3]
+            return redirect("/")
+        return "Login failed"
+
+    return render_template("login.html")
+
+@app.route("/logout")
+def logout():
+    session.clear()
+    return redirect("/login")
+
+# 🏠 DASHBOARD
+@app.route("/")
+def index():
+    if "user" not in session:
+        return redirect("/login")
+
+    conn = db()
+    c = conn.cursor()
+
+    bookings = c.execute("SELECT * FROM bookings").fetchall()
+    payments = c.execute("SELECT * FROM payments").fetchall()
+
+    total_revenue = sum(p[2] for p in payments)
+    total_bookings = len(bookings)
+
+    conn.close()
+
+    return render_template("empire_dashboard.html",
+        revenue=total_revenue,
+        bookings=total_bookings,
+        user=session["user"]
+    )
+
+# ➕ BOOK
+@app.route("/book", methods=["POST"])
+def book():
+    conn = db()
+    c = conn.cursor()
+
+    user = session["user"]
+
+    c.execute("""INSERT INTO bookings
+        VALUES (NULL,?,?,?,?,?,?,?)""",
+        (
+            request.form["name"],
+            request.form["players"],
+            request.form["time"],
+            request.form["court"],
+            float(request.form["amount"]),
+            str(date.today()),
+            user
+        )
+    )
+
+    # LOG
+    c.execute("""INSERT INTO logs VALUES (NULL,?,?,?,?)""",
+        ("BOOK", user, request.form["name"], str(date.today()))
+    )
+
+    conn.commit()
+    conn.close()
+    return redirect("/")
+
+# 💳 PAYMENT
+@app.route("/add_payment", methods=["POST"])
+def pay():
+    conn = db()
+    c = conn.cursor()
+
+    user = session["user"]
+
+    c.execute("""INSERT INTO payments VALUES (NULL,?,?,?,?)""",
+        (
+            request.form["booking_id"],
+            float(request.form["amount"]),
+            request.form["method"],
+            user
+        )
+    )
+
+    c.execute("""INSERT INTO logs VALUES (NULL,?,?,?,?)""",
+        ("PAYMENT", user, request.form["booking_id"], str(date.today()))
+    )
+
+    conn.commit()
+    conn.close()
+    return redirect("/")
+
+# 📊 ANALYTICS
+@app.route("/analytics")
+def analytics():
+    conn = db()
+    c = conn.cursor()
+
+    bookings = c.execute("SELECT * FROM bookings").fetchall()
+    payments = c.execute("SELECT * FROM payments").fetchall()
+    logs = c.execute("SELECT * FROM logs").fetchall()
+
+    revenue = sum(p[2] for p in payments)
+
+    conn.close()
+
+    return render_template("empire_analytics.html",
+        revenue=revenue,
+        bookings=len(bookings),
+        actions=len(logs)
+    )
+
+# 📜 LOGS
+@app.route("/logs")
+def logs():
+    conn = db()
+    c = conn.cursor()
+
+    data = c.execute("SELECT * FROM logs ORDER BY id DESC").fetchall()
+
+    conn.close()
+
+    return render_template("logs.html", data=data)
+
+if __name__ == "__main__":
+    app.run(debug=True)
