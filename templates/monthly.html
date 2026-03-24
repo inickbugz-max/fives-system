@@ -2,93 +2,16 @@
 <html>
 <head>
     <title>Monthly</title>
-
-    <style>
-        body {
-            background:#0f172a;
-            color:white;
-            font-family:Arial;
-            padding:20px;
-        }
-
-        .card {
-            background:#1e293b;
-            padding:12px;
-            margin:10px 0;
-            border-radius:10px;
-        }
-
-        .btn {
-            display:inline-block;
-            padding:10px 15px;
-            margin:5px 5px 10px 0;
-            border-radius:8px;
-            text-decoration:none;
-            font-weight:bold;
-        }
-
-        .pdf { background:#dc2626; color:white; }
-        .excel { background:#16a34a; color:white; }
-        .filter { background:#1e293b; padding:10px; border-radius:10px; margin-bottom:15px; }
-
-        select, button {
-            padding:8px;
-            margin-top:5px;
-        }
-
-        a {
-            color:lightgreen;
-            text-decoration:none;
-        }
-    </style>
+    <link rel="stylesheet" href="/static/style.css">
 </head>
 
 <body>
 
-<h2>📊 Monthly Overview</h2>
+<h1>📊 Monthly Page</h1>
 
-<a href="/dashboard">← Back to Dashboard</a>
+<p>This page will show bookings soon.</p>
 
-<!-- 🔥 FILTER -->
-<div class="filter">
-    <form method="GET" action="/monthly">
-        <label>Select Month:</label><br>
-
-        <select name="month">
-            <option value="">All</option>
-            <option value="2026-01" {% if selected_month == "2026-01" %}selected{% endif %}>Jan 2026</option>
-            <option value="2026-02" {% if selected_month == "2026-02" %}selected{% endif %}>Feb 2026</option>
-            <option value="2026-03" {% if selected_month == "2026-03" %}selected{% endif %}>Mar 2026</option>
-            <option value="2026-04" {% if selected_month == "2026-04" %}selected{% endif %}>Apr 2026</option>
-        </select>
-
-        <button type="submit">Apply</button>
-    </form>
-</div>
-
-<!-- 🔥 EXPORT BUTTONS (NOW SYNCED) -->
-<div>
-    <a href="/export_pdf?month={{ selected_month }}" class="btn pdf">📄 Export PDF</a>
-    <a href="/export_excel?month={{ selected_month }}" class="btn excel">📊 Export Excel</a>
-</div>
-
-<!-- 🔥 SUMMARY -->
-<h3>💰 Summary</h3>
-<div class="card">
-    Total Collected: <b>R{{ total_collected }}</b><br>
-    Total Outstanding: <b>R{{ total_outstanding }}</b>
-</div>
-
-<!-- 🔥 PLAYERS -->
-<h3>👤 Players</h3>
-{% for name, data in players.items() %}
-<div class="card">
-    <b>{{ name }}</b><br>
-    Paid: R{{ data.paid }}<br>
-    Total: R{{ data.total }}<br>
-    Outstanding: R{{ data.total - data.paid }}
-</div>
-{% endfor %}
+<a href="/">⬅ Back to Dashboard</a>
 
 </body>
 </html>
