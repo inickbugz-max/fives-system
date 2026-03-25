@@ -3,26 +3,26 @@ import sqlite3
 
 app = Flask(__name__)
 
-# DATABASE
+# 🔌 DATABASE
 def get_db():
     conn = sqlite3.connect('database.db')
     conn.row_factory = sqlite3.Row
     return conn
 
 
-# HOME
+# 🏠 HOME
 @app.route('/')
 def home():
     return render_template('dashboard.html')
 
 
-# MONTHLY (WITH COURTS)
+# 📅 MONTHLY (BOARD VIEW + 3 COURTS)
 @app.route('/monthly', methods=['GET', 'POST'])
 def monthly():
     conn = get_db()
     cursor = conn.cursor()
 
-    # CREATE TABLE WITH COURT COLUMN
+    # CREATE TABLE
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS bookings (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -40,7 +40,7 @@ def monthly():
         date = request.form.get('date')
         time = request.form.get('time')
 
-        # GET EXISTING BOOKINGS FOR SLOT
+        # GET EXISTING BOOKINGS
         cursor.execute(
             "SELECT court FROM bookings WHERE date = ? AND time = ?",
             (date, time)
@@ -49,34 +49,44 @@ def monthly():
 
         used_courts = [row["court"] for row in existing]
 
-        # FIND AVAILABLE COURT
+        # ASSIGN COURT
+        assigned_court = None
         for court in [1, 2, 3]:
             if court not in used_courts:
                 assigned_court = court
                 break
-        else:
-            assigned_court = None
 
         if assigned_court is None:
-            message = "❌ All courts are booked!"
+            message = "❌ All courts booked!"
         else:
             cursor.execute(
                 "INSERT INTO bookings (name, date, time, court) VALUES (?, ?, ?, ?)",
                 (name, date, time, assigned_court)
             )
             conn.commit()
-            message = f"✅ Booked on Court {assigned_court}"
+            message = f"✅ Court {assigned_court} booked"
 
     # GET BOOKINGS
-    cursor.execute("SELECT * FROM bookings ORDER BY date, time, court")
-    bookings = cursor.fetchall()
+    cursor.execute("SELECT * FROM bookings")
+    rows = cursor.fetchall()
+
+    # 🔥 BUILD GRID
+    grid = {}
+
+    for row in rows:
+        t = row["time"]
+
+        if t not in grid:
+            grid[t] = {1: None, 2: None, 3: None}
+
+        grid[t][row["court"]] = row["name"]
 
     conn.close()
 
-    return render_template('monthly.html', bookings=bookings, message=message)
+    return render_template('monthly.html', grid=grid, message=message)
 
 
-# DELETE
+# 🗑 DELETE
 @app.route('/delete/<int:id>')
 def delete(id):
     conn = get_db()
@@ -123,6 +133,6 @@ def ref_stats():
     return render_template('ref_stats.html')
 
 
-# RUN
+# ▶ RUN
 if __name__ == "__main__":
     app.run(debug=True)
