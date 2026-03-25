@@ -16,7 +16,7 @@ def home():
     return render_template('dashboard.html')
 
 
-# MONTHLY
+# MONTHLY (FULL SYSTEM)
 @app.route('/monthly', methods=['GET', 'POST'])
 def monthly():
     conn = get_db()
@@ -50,20 +50,19 @@ def monthly():
 
         used_courts = [row["court"] for row in existing if row["court"]]
 
-        # 🎯 IF USER SELECTED COURT
+        # MANUAL COURT
         if selected_court:
             selected_court = int(selected_court)
 
             if selected_court in used_courts:
                 message = f"❌ Court {selected_court} already booked!"
             else:
-                assigned_court = selected_court
                 cursor.execute(
                     "INSERT INTO bookings (name, date, time, court) VALUES (?, ?, ?, ?)",
-                    (name, date, time, assigned_court)
+                    (name, date, time, selected_court)
                 )
                 conn.commit()
-                message = f"✅ {name} booked Court {assigned_court}"
+                message = f"✅ {name} booked Court {selected_court}"
 
         else:
             # AUTO ASSIGN
@@ -87,13 +86,12 @@ def monthly():
     cursor.execute("SELECT * FROM bookings")
     rows = cursor.fetchall()
 
-    # GRID
+    # BUILD GRID (WITH ID + NAME)
     grid = {}
 
     for row in rows:
         time = row["time"]
         court = row["court"]
-        name = row["name"]
 
         if not court:
             continue
@@ -101,14 +99,17 @@ def monthly():
         if time not in grid:
             grid[time] = {1: None, 2: None, 3: None}
 
-        grid[time][court] = name
+        grid[time][court] = {
+            "id": row["id"],
+            "name": row["name"]
+        }
 
     conn.close()
 
     return render_template('monthly.html', grid=grid, message=message)
 
 
-# DELETE
+# DELETE BOOKING
 @app.route('/delete/<int:id>')
 def delete(id):
     conn = get_db()
@@ -121,7 +122,7 @@ def delete(id):
     return redirect('/monthly')
 
 
-# OTHER PAGES
+# OTHER PAGES (UNCHANGED)
 @app.route('/daily')
 def daily():
     return render_template('daily.html')

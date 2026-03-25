@@ -11,14 +11,6 @@
             text-align: center;
         }
 
-        h1 {
-            margin-top: 20px;
-        }
-
-        form {
-            margin: 20px;
-        }
-
         input, select, button {
             padding: 10px;
             margin: 5px;
@@ -30,6 +22,10 @@
             background: #22c55e;
             color: white;
             cursor: pointer;
+        }
+
+        .delete-btn {
+            background: red;
         }
 
         table {
@@ -53,16 +49,10 @@
 
         .booked {
             background: #22c55e;
-            font-weight: bold;
         }
 
         .empty {
             background: #1e293b;
-        }
-
-        .message {
-            margin-top: 10px;
-            font-weight: bold;
         }
     </style>
 </head>
@@ -71,22 +61,16 @@
 
 <h1>📅 Booking Board</h1>
 
-<!-- ✅ MESSAGE -->
 {% if message %}
-    {% if "❌" in message %}
-        <div class="message" style="color:red;">{{ message }}</div>
-    {% else %}
-        <div class="message" style="color:lightgreen;">{{ message }}</div>
-    {% endif %}
+<p>{{ message }}</p>
 {% endif %}
 
-<!-- ✅ BOOKING FORM -->
+<!-- FORM -->
 <form method="POST">
     <input type="text" name="name" placeholder="Name" required>
     <input type="date" name="date" required>
     <input type="time" name="time" required>
 
-    <!-- 🎯 COURT SELECT -->
     <select name="court">
         <option value="">Auto Assign</option>
         <option value="1">Court 1</option>
@@ -97,7 +81,7 @@
     <button type="submit">Book</button>
 </form>
 
-<!-- ✅ BOOKING GRID -->
+<!-- GRID -->
 <table>
     <tr>
         <th>Time</th>
@@ -110,28 +94,40 @@
     <tr>
         <td>{{ time }}</td>
 
-        <!-- COURT 1 -->
+        <!-- Court 1 -->
         <td class="{{ 'booked' if courts[1] else 'empty' }}">
             {% if courts[1] %}
-                {{ courts[1] }} <br><small>Court 1</small>
+                {{ courts[1].name }}<br>
+                <small>Court 1</small><br>
+                <a href="/delete/{{ courts[1].id }}">
+                    <button class="delete-btn">Delete</button>
+                </a>
             {% else %}
                 -
             {% endif %}
         </td>
 
-        <!-- COURT 2 -->
+        <!-- Court 2 -->
         <td class="{{ 'booked' if courts[2] else 'empty' }}">
             {% if courts[2] %}
-                {{ courts[2] }} <br><small>Court 2</small>
+                {{ courts[2].name }}<br>
+                <small>Court 2</small><br>
+                <a href="/delete/{{ courts[2].id }}">
+                    <button class="delete-btn">Delete</button>
+                </a>
             {% else %}
                 -
             {% endif %}
         </td>
 
-        <!-- COURT 3 -->
+        <!-- Court 3 -->
         <td class="{{ 'booked' if courts[3] else 'empty' }}">
             {% if courts[3] %}
-                {{ courts[3] }} <br><small>Court 3</small>
+                {{ courts[3].name }}<br>
+                <small>Court 3</small><br>
+                <a href="/delete/{{ courts[3].id }}">
+                    <button class="delete-btn">Delete</button>
+                </a>
             {% else %}
                 -
             {% endif %}
