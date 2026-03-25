@@ -3,32 +3,33 @@ import sqlite3
 
 app = Flask(__name__)
 
-# 🔌 DATABASE CONNECTION
+# DATABASE
 def get_db():
     conn = sqlite3.connect('database.db')
     conn.row_factory = sqlite3.Row
     return conn
 
 
-# 🏠 HOME
+# HOME
 @app.route('/')
 def home():
     return render_template('dashboard.html')
 
 
-# 📅 MONTHLY BOOKINGS (3 COURTS LOGIC)
+# MONTHLY (WITH COURTS)
 @app.route('/monthly', methods=['GET', 'POST'])
 def monthly():
     conn = get_db()
     cursor = conn.cursor()
 
-    # CREATE TABLE
+    # CREATE TABLE WITH COURT COLUMN
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS bookings (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT,
             date TEXT,
-            time TEXT
+            time TEXT,
+            court INTEGER
         )
     ''')
 
@@ -39,25 +40,35 @@ def monthly():
         date = request.form.get('date')
         time = request.form.get('time')
 
-        # 🔢 COUNT BOOKINGS FOR THIS SLOT
+        # GET EXISTING BOOKINGS FOR SLOT
         cursor.execute(
-            "SELECT COUNT(*) as count FROM bookings WHERE date = ? AND time = ?",
+            "SELECT court FROM bookings WHERE date = ? AND time = ?",
             (date, time)
         )
-        count = cursor.fetchone()["count"]
+        existing = cursor.fetchall()
 
-        if count >= 3:
-            message = "❌ All 3 courts are booked for this time!"
+        used_courts = [row["court"] for row in existing]
+
+        # FIND AVAILABLE COURT
+        for court in [1, 2, 3]:
+            if court not in used_courts:
+                assigned_court = court
+                break
+        else:
+            assigned_court = None
+
+        if assigned_court is None:
+            message = "❌ All courts are booked!"
         else:
             cursor.execute(
-                "INSERT INTO bookings (name, date, time) VALUES (?, ?, ?)",
-                (name, date, time)
+                "INSERT INTO bookings (name, date, time, court) VALUES (?, ?, ?, ?)",
+                (name, date, time, assigned_court)
             )
             conn.commit()
-            message = f"✅ Booking added! ({count + 1}/3 courts used)"
+            message = f"✅ Booked on Court {assigned_court}"
 
     # GET BOOKINGS
-    cursor.execute("SELECT * FROM bookings ORDER BY date, time")
+    cursor.execute("SELECT * FROM bookings ORDER BY date, time, court")
     bookings = cursor.fetchall()
 
     conn.close()
@@ -65,7 +76,7 @@ def monthly():
     return render_template('monthly.html', bookings=bookings, message=message)
 
 
-# 🗑 DELETE BOOKING
+# DELETE
 @app.route('/delete/<int:id>')
 def delete(id):
     conn = get_db()
@@ -78,7 +89,7 @@ def delete(id):
     return redirect('/monthly')
 
 
-# 📅 OTHER PAGES
+# OTHER PAGES
 @app.route('/daily')
 def daily():
     return render_template('daily.html')
@@ -112,6 +123,6 @@ def ref_stats():
     return render_template('ref_stats.html')
 
 
-# ▶ RUN LOCAL
+# RUN
 if __name__ == "__main__":
     app.run(debug=True)
