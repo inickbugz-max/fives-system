@@ -2,6 +2,7 @@
 <html>
 <head>
     <title>Monthly Bookings</title>
+
     <style>
         body {
             font-family: Arial;
@@ -12,10 +13,6 @@
 
         h1 {
             margin-top: 20px;
-        }
-
-        form {
-            margin: 20px auto;
         }
 
         input, button {
@@ -31,6 +28,10 @@
             cursor: pointer;
         }
 
+        .delete-btn {
+            background: red;
+        }
+
         table {
             margin: 20px auto;
             border-collapse: collapse;
@@ -41,6 +42,12 @@
             padding: 10px;
             border-bottom: 1px solid #444;
         }
+
+        .message {
+            margin-top: 10px;
+            font-weight: bold;
+            color: yellow;
+        }
     </style>
 </head>
 
@@ -48,7 +55,12 @@
 
 <h1>📅 Monthly Bookings</h1>
 
-<!-- ✅ BOOKING FORM -->
+<!-- ✅ MESSAGE -->
+{% if message %}
+    <div class="message">{{ message }}</div>
+{% endif %}
+
+<!-- ✅ FORM -->
 <form method="POST">
     <input type="text" name="name" placeholder="Name" required>
     <input type="date" name="date" required>
@@ -56,7 +68,7 @@
     <button type="submit">Add Booking</button>
 </form>
 
-<!-- ✅ BOOKINGS TABLE -->
+<!-- ✅ TABLE -->
 <table>
     <tr>
         <th>Name</th>
@@ -70,12 +82,12 @@
         <td>{{ booking.name }}</td>
         <td>{{ booking.date }}</td>
         <td>{{ booking.time }}</td>
-    </td>
-        <a href="/delete/{{booking.id}}">
-            <button style="background:red;">Delete</button>
+        <td>
+            <a href="/delete/{{ booking.id }}">
+                <button class="delete-btn">Delete</button>
             </a>
         </td>
-    </tr>            
+    </tr>
     {% endfor %}
 </table>
 
