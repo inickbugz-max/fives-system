@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, redirect
 import sqlite3
 
 app = Flask(__name__)
@@ -100,6 +100,16 @@ def reports():
 def ref_stats():
     return render_template('ref_stats.html')
 
+@app.route('/delete/<int:id>')
+def delete(id):
+    conn = get_db()
+    cursor = conn.cursor()
+
+    cursor.execute("DELETE FROM bookings WHERE id = ?", (id,))
+    conn.commit()
+    conn.close()
+
+    return redirect('/monthly')
 
 # ▶ RUN
 if __name__ == "__main__":

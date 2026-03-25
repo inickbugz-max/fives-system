@@ -62,6 +62,7 @@
         <th>Name</th>
         <th>Date</th>
         <th>Time</th>
+        <th>Action</th>
     </tr>
 
     {% for booking in bookings %}
@@ -69,7 +70,12 @@
         <td>{{ booking.name }}</td>
         <td>{{ booking.date }}</td>
         <td>{{ booking.time }}</td>
-    </tr>
+    </td>
+        <a href="/delete/{{booking.id}}">
+            <button style="background:red;">Delete</button>
+            </a>
+        </td>
+    </tr>            
     {% endfor %}
 </table>
 
