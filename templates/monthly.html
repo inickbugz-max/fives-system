@@ -19,7 +19,7 @@
             margin: 20px;
         }
 
-        input, button {
+        input, select, button {
             padding: 10px;
             margin: 5px;
             border-radius: 6px;
@@ -53,10 +53,16 @@
 
         .booked {
             background: #22c55e;
+            font-weight: bold;
         }
 
         .empty {
             background: #1e293b;
+        }
+
+        .message {
+            margin-top: 10px;
+            font-weight: bold;
         }
     </style>
 </head>
@@ -65,19 +71,33 @@
 
 <h1>📅 Booking Board</h1>
 
+<!-- ✅ MESSAGE -->
 {% if message %}
-<p>{{ message }}</p>
+    {% if "❌" in message %}
+        <div class="message" style="color:red;">{{ message }}</div>
+    {% else %}
+        <div class="message" style="color:lightgreen;">{{ message }}</div>
+    {% endif %}
 {% endif %}
 
-<!-- BOOKING FORM -->
+<!-- ✅ BOOKING FORM -->
 <form method="POST">
     <input type="text" name="name" placeholder="Name" required>
     <input type="date" name="date" required>
     <input type="time" name="time" required>
+
+    <!-- 🎯 COURT SELECT -->
+    <select name="court">
+        <option value="">Auto Assign</option>
+        <option value="1">Court 1</option>
+        <option value="2">Court 2</option>
+        <option value="3">Court 3</option>
+    </select>
+
     <button type="submit">Book</button>
 </form>
 
-<!-- BOOKING GRID -->
+<!-- ✅ BOOKING GRID -->
 <table>
     <tr>
         <th>Time</th>
@@ -90,17 +110,33 @@
     <tr>
         <td>{{ time }}</td>
 
+        <!-- COURT 1 -->
         <td class="{{ 'booked' if courts[1] else 'empty' }}">
-            {{ courts[1] if courts[1] else "-" }}
+            {% if courts[1] %}
+                {{ courts[1] }} <br><small>Court 1</small>
+            {% else %}
+                -
+            {% endif %}
         </td>
 
+        <!-- COURT 2 -->
         <td class="{{ 'booked' if courts[2] else 'empty' }}">
-            {{ courts[2] if courts[2] else "-" }}
+            {% if courts[2] %}
+                {{ courts[2] }} <br><small>Court 2</small>
+            {% else %}
+                -
+            {% endif %}
         </td>
 
+        <!-- COURT 3 -->
         <td class="{{ 'booked' if courts[3] else 'empty' }}">
-            {{ courts[3] if courts[3] else "-" }}
+            {% if courts[3] %}
+                {{ courts[3] }} <br><small>Court 3</small>
+            {% else %}
+                -
+            {% endif %}
         </td>
+
     </tr>
     {% endfor %}
 </table>

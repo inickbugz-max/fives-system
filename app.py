@@ -3,20 +3,20 @@ import sqlite3
 
 app = Flask(__name__)
 
-# 🔌 DATABASE CONNECTION
+# DATABASE
 def get_db():
     conn = sqlite3.connect('database.db')
     conn.row_factory = sqlite3.Row
     return conn
 
 
-# 🏠 HOME
+# HOME
 @app.route('/')
 def home():
     return render_template('dashboard.html')
 
 
-# 📅 MONTHLY (BOOKING BOARD + COURTS)
+# MONTHLY
 @app.route('/monthly', methods=['GET', 'POST'])
 def monthly():
     conn = get_db()
@@ -39,6 +39,7 @@ def monthly():
         name = request.form.get('name')
         date = request.form.get('date')
         time = request.form.get('time')
+        selected_court = request.form.get('court')
 
         # GET EXISTING BOOKINGS
         cursor.execute(
@@ -49,28 +50,44 @@ def monthly():
 
         used_courts = [row["court"] for row in existing if row["court"]]
 
-        # AUTO ASSIGN COURT
-        assigned_court = None
-        for court in [1, 2, 3]:
-            if court not in used_courts:
-                assigned_court = court
-                break
+        # 🎯 IF USER SELECTED COURT
+        if selected_court:
+            selected_court = int(selected_court)
 
-        if assigned_court is None:
-            message = "❌ All courts booked!"
+            if selected_court in used_courts:
+                message = f"❌ Court {selected_court} already booked!"
+            else:
+                assigned_court = selected_court
+                cursor.execute(
+                    "INSERT INTO bookings (name, date, time, court) VALUES (?, ?, ?, ?)",
+                    (name, date, time, assigned_court)
+                )
+                conn.commit()
+                message = f"✅ {name} booked Court {assigned_court}"
+
         else:
-            cursor.execute(
-                "INSERT INTO bookings (name, date, time, court) VALUES (?, ?, ?, ?)",
-                (name, date, time, assigned_court)
-            )
-            conn.commit()
-            message = f"✅ {name} booked on Court {assigned_court}"
+            # AUTO ASSIGN
+            assigned_court = None
+            for court in [1, 2, 3]:
+                if court not in used_courts:
+                    assigned_court = court
+                    break
+
+            if assigned_court is None:
+                message = "❌ All courts booked!"
+            else:
+                cursor.execute(
+                    "INSERT INTO bookings (name, date, time, court) VALUES (?, ?, ?, ?)",
+                    (name, date, time, assigned_court)
+                )
+                conn.commit()
+                message = f"✅ {name} auto booked Court {assigned_court}"
 
     # GET BOOKINGS
     cursor.execute("SELECT * FROM bookings")
     rows = cursor.fetchall()
 
-    # 🔥 BUILD GRID (FIXED)
+    # GRID
     grid = {}
 
     for row in rows:
@@ -79,7 +96,7 @@ def monthly():
         name = row["name"]
 
         if not court:
-            continue  # skip bad/old data
+            continue
 
         if time not in grid:
             grid[time] = {1: None, 2: None, 3: None}
@@ -91,7 +108,7 @@ def monthly():
     return render_template('monthly.html', grid=grid, message=message)
 
 
-# 🗑 DELETE BOOKING
+# DELETE
 @app.route('/delete/<int:id>')
 def delete(id):
     conn = get_db()
@@ -104,47 +121,39 @@ def delete(id):
     return redirect('/monthly')
 
 
-# 📅 OTHER PAGES
+# OTHER PAGES
 @app.route('/daily')
 def daily():
     return render_template('daily.html')
-
 
 @app.route('/billing')
 def billing():
     return render_template('billing.html')
 
-
 @app.route('/calendar')
 def calendar():
     return render_template('calendar.html')
-
 
 @app.route('/league')
 def league():
     return render_template('league.html')
 
-
 @app.route('/games')
 def games():
     return render_template('games.html')
-
 
 @app.route('/fixtures')
 def fixtures():
     return render_template('fixtures.html')
 
-
 @app.route('/reports')
 def reports():
     return render_template('reports.html')
-
 
 @app.route('/ref-stats')
 def ref_stats():
     return render_template('ref_stats.html')
 
 
-# ▶ RUN LOCAL
 if __name__ == "__main__":
     app.run(debug=True)
