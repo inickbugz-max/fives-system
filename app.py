@@ -16,7 +16,7 @@ def home():
     return render_template('dashboard.html')
 
 
-# 📅 MONTHLY BOOKINGS (WITH DUPLICATE PREVENTION)
+# 📅 MONTHLY BOOKINGS (3 COURTS LOGIC)
 @app.route('/monthly', methods=['GET', 'POST'])
 def monthly():
     conn = get_db()
@@ -39,22 +39,22 @@ def monthly():
         date = request.form.get('date')
         time = request.form.get('time')
 
-        # 🚫 CHECK FOR DOUBLE BOOKING
+        # 🔢 COUNT BOOKINGS FOR THIS SLOT
         cursor.execute(
-            "SELECT * FROM bookings WHERE date = ? AND time = ?",
+            "SELECT COUNT(*) as count FROM bookings WHERE date = ? AND time = ?",
             (date, time)
         )
-        existing = cursor.fetchone()
+        count = cursor.fetchone()["count"]
 
-        if existing:
-            message = "❌ Time slot already booked!"
+        if count >= 3:
+            message = "❌ All 3 courts are booked for this time!"
         else:
             cursor.execute(
                 "INSERT INTO bookings (name, date, time) VALUES (?, ?, ?)",
                 (name, date, time)
             )
             conn.commit()
-            message = "✅ Booking added!"
+            message = f"✅ Booking added! ({count + 1}/3 courts used)"
 
     # GET BOOKINGS
     cursor.execute("SELECT * FROM bookings ORDER BY date, time")
@@ -78,7 +78,7 @@ def delete(id):
     return redirect('/monthly')
 
 
-# OTHER PAGES
+# 📅 OTHER PAGES
 @app.route('/daily')
 def daily():
     return render_template('daily.html')
