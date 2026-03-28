@@ -1,36 +1,332 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Fives Futbol System</title>
-    <link rel="stylesheet" href="/static/style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard | Fives System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <style>
+        .schedule-table th, .schedule-table td {
+            vertical-align: middle;
+        }
+        .booked-cell {
+            background-color: #f8d7da;
+            cursor: pointer;
+        }
+        .available-cell {
+            background-color: #d1e7dd;
+            cursor: pointer;
+        }
+        .available-cell:hover {
+            background-color: #a3cfbb;
+        }
+        .whatsapp-btn {
+            background-color: #25D366;
+            color: white;
+            border-radius: 20px;
+            padding: 4px 10px;
+            font-size: 0.8rem;
+            text-decoration: none;
+        }
+        .whatsapp-btn:hover {
+            background-color: #128C7E;
+            color: white;
+        }
+        .payment-btn {
+            font-size: 0.8rem;
+            padding: 4px 8px;
+        }
+    </style>
 </head>
+<body class="bg-light">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/dashboard">Fives System</a>
+            <div class="collapse navbar-collapse">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <li class="nav-item"><a class="nav-link active" href="/dashboard">Dashboard</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/bookings">Bookings</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/league">League</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/reports">Reports</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/analytics">Analytics</a></li>
+                </ul>
+                <div class="d-flex">
+                    <span class="navbar-text me-3">Welcome, {{ user }}</span>
+                    <a href="/logout" class="btn btn-outline-light btn-sm">Logout</a>
+                </div>
+            </div>
+        </div>
+    </nav>
 
-<body>
+    <div class="container mt-4">
+        <!-- Date Picker -->
+        <div class="row mb-4">
+            <div class="col-md-4">
+                <form method="get" action="/dashboard" class="row g-2 align-items-center">
+                    <div class="col-auto">
+                        <label class="col-form-label">Select Date:</label>
+                    </div>
+                    <div class="col-auto">
+                        <input type="date" name="date" value="{{ today }}" class="form-control" onchange="this.form.submit()">
+                    </div>
+                </form>
+            </div>
+        </div>
 
-<h1>⚽ Fives Futbol System</h1>
+        <!-- Stats Cards -->
+        <div class="row g-4 mb-4">
+            <div class="col-md-4">
+                <div class="card text-white bg-primary shadow">
+                    <div class="card-body">
+                        <h5 class="card-title">Today's Bookings</h5>
+                        <p class="card-text display-6">{{ total_bookings_day }}</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card text-white bg-success shadow">
+                    <div class="card-body">
+                        <h5 class="card-title">Today's Revenue</h5>
+                        <p class="card-text display-6">R{{ total_paid_day }}</p>
+                        <small>Outstanding: R{{ total_outstanding_day }}</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card text-white bg-info shadow">
+                    <div class="card-body">
+                        <h5 class="card-title">Total Revenue</h5>
+                        <p class="card-text display-6">R{{ all_revenue }}</p>
+                        <small>Total Bookings: {{ all_bookings }}</small>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-<div class="menu">
+        <!-- Schedule Table -->
+        <div class="card shadow">
+            <div class="card-header bg-white">
+                <h5 class="mb-0">Schedule for {{ today }}</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-bordered schedule-table mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Time</th>
+                                {% for court in courts %}
+                                <th>{{ court }}</th>
+                                {% endfor %}
+                            </thead>
+                        <tbody>
+                            {% for time in times %}
+                            <tr>
+                                <td class="fw-bold">{{ time }}</td>
+                                {% for court in courts %}
+                                    {% set booking = schedule[time][court] %}
+                                    {% if booking %}
+                                    <td class="booked-cell" data-booking-id="{{ booking[0] }}" style="cursor:pointer">
+                                        <div><strong>{{ booking[1] }}</strong></div>
+                                        <div><small>{{ booking[6] }}</small></div>
+                                        <div>R{{ booking[7] }} <span class="text-success">Paid: R{{ booking[8] }}</span></div>
+                                        <div class="mt-2">
+                                            <button class="btn btn-sm btn-success payment-btn" data-booking-id="{{ booking[0] }}">Pay</button>
+                                            <a href="/whatsapp/{{ booking[0] }}" class="whatsapp-btn ms-1" target="_blank">WhatsApp</a>
+                                        </div>
+                                    </td>
+                                    {% else %}
+                                    <td class="available-cell" onclick="showForm('{{ time }}', '{{ court }}')">
+                                        AVAILABLE
+                                    </td>
+                                    {% endif %}
+                                {% endfor %}
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
 
-    <h2>Main</h2>
-    <a href="/monthly">📊 Monthly</a>
-    <a href="/daily">📅 Daily</a>
-    <a href="/billing">💰 Billing</a>
-    <a href="/calendar">🗓 Calendar</a>
+    <!-- Add Booking Modal -->
+    <div class="modal fade" id="bookingModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Add Booking</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form method="post" action="/add" id="bookingForm">
+                    <div class="modal-body">
+                        <input type="hidden" name="time" id="time">
+                        <input type="hidden" name="court" id="court">
+                        <div class="mb-3">
+                            <label class="form-label">Player/Team Name</label>
+                            <input type="text" name="name" class="form-control" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Phone Number</label>
+                            <input type="text" name="phone" class="form-control" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Booking Type</label>
+                            <select name="booking_type" id="booking_type" class="form-select" required onchange="toggleLeagueFields()">
+                                <option value="social">Social</option>
+                                <option value="league">League</option>
+                            </select>
+                        </div>
+                        <div id="league_fields" style="display:none;">
+                            <div class="mb-3">
+                                <label class="form-label">Home Team</label>
+                                <select name="home_team_id" id="home_team_id" class="form-select">
+                                    <option value="">Select Home Team</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Away Team</label>
+                                <select name="away_team_id" id="away_team_id" class="form-select">
+                                    <option value="">Select Away Team</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Referee (optional)</label>
+                                <input type="text" name="referee" class="form-control">
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Amount (R)</label>
+                            <input type="number" name="amount" class="form-control" required>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Book</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 
-    <hr>
+    <!-- Payment Modal -->
+    <div class="modal fade" id="paymentModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalTitle">Record Payment</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form method="post" action="#" id="paymentForm">
+                    <div class="modal-body">
+                        <input type="hidden" name="booking_id" id="paymentBookingId">
+                        <div class="mb-3">
+                            <label class="form-label">Payer Name</label>
+                            <input type="text" name="payer_name" class="form-control" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Amount (R)</label>
+                            <input type="number" name="amount" class="form-control" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Payment Method</label>
+                            <select name="method" class="form-select" required>
+                                <option value="cash">Cash</option>
+                                <option value="card">Card</option>
+                                <option value="eft">EFT</option>
+                            </select>
+                        </div>
+                        <div id="paymentHistory" class="mt-3 small text-muted"></div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Submit Payment</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 
-    <h2>League</h2>
-    <a href="/league">⚽ League</a>
-    <a href="/games">🎮 Games</a>
-    <a href="/fixtures">📋 Fixtures</a>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Initialize Bootstrap modals
+        const bookingModal = new bootstrap.Modal(document.getElementById('bookingModal'));
+        const paymentModal = new bootstrap.Modal(document.getElementById('paymentModal'));
 
-    <hr>
+        // Show booking form
+        window.showForm = function(time, court) {
+            document.getElementById('time').value = time;
+            document.getElementById('court').value = court;
+            bookingModal.show();
+        };
 
-    <h2>Reports</h2>
-    <a href="/reports">📊 Reports</a>
-    <a href="/ref-stats">🧑‍⚖️ Ref Stats</a>
+        // Toggle league fields
+        window.toggleLeagueFields = function() {
+            const type = document.getElementById('booking_type').value;
+            const fields = document.getElementById('league_fields');
+            fields.style.display = type === 'league' ? 'block' : 'none';
+            if (type === 'league') {
+                fetch('/api/teams')
+                    .then(response => response.json())
+                    .then(data => {
+                        const homeSelect = document.getElementById('home_team_id');
+                        const awaySelect = document.getElementById('away_team_id');
+                        homeSelect.innerHTML = '<option value="">Select Home Team</option>';
+                        awaySelect.innerHTML = '<option value="">Select Away Team</option>';
+                        data.forEach(team => {
+                            homeSelect.innerHTML += `<option value="${team.id}">${team.name}</option>`;
+                            awaySelect.innerHTML += `<option value="${team.id}">${team.name}</option>`;
+                        });
+                    });
+            }
+        };
 
-</div>
+        // Payment modal functions
+        function showPaymentModal(bookingId) {
+            fetch(`/api/booking/${bookingId}`)
+                .then(response => response.json())
+                .then(booking => {
+                    document.getElementById('modalTitle').innerHTML = `Record Payment for ${booking.name}`;
+                    document.getElementById('paymentBookingId').value = bookingId;
+                    document.getElementById('paymentForm').action = `/payment/${bookingId}`;
+                    loadPaymentHistory(bookingId);
+                    paymentModal.show();
+                })
+                .catch(err => alert('Could not load booking details.'));
+        }
 
+        function loadPaymentHistory(bookingId) {
+            fetch(`/api/payments/${bookingId}`)
+                .then(response => response.json())
+                .then(data => {
+                    let historyHtml = '<strong>Payment History:</strong><br>';
+                    if (data.length === 0) {
+                        historyHtml += 'No payments recorded yet.';
+                    } else {
+                        data.forEach(p => {
+                            historyHtml += `${p.payer}: R${p.amount} (${p.method}) on ${p.date}<br>`;
+                        });
+                    }
+                    document.getElementById('paymentHistory').innerHTML = historyHtml;
+                })
+                .catch(() => document.getElementById('paymentHistory').innerHTML = 'Error loading payment history.');
+        }
+
+        // Attach click events to booked cells and payment buttons
+        document.querySelectorAll('.booked-cell').forEach(cell => {
+            cell.addEventListener('click', (e) => {
+                if (e.target.tagName === 'BUTTON' || e.target.classList.contains('whatsapp-btn')) return;
+                const bookingId = cell.getAttribute('data-booking-id');
+                if (bookingId) showPaymentModal(bookingId);
+            });
+        });
+        document.querySelectorAll('.payment-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const bookingId = btn.getAttribute('data-booking-id');
+                if (bookingId) showPaymentModal(bookingId);
+            });
+        });
+    </script>
 </body>
 </html>

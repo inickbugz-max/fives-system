@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>All League Matches - Fives System</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        table { border-collapse: collapse; width: 100%; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #007bff; color: white; }
+        .nav a { margin-right: 15px; text-decoration: none; color: #007bff; }
+        .logout { float: right; background-color: #dc3545; color: white; padding: 5px 10px; text-decoration: none; border-radius: 4px; }
+    </style>
+</head>
+<body>
+    <div style="overflow:auto;">
+        <a href="/logout" class="logout">Logout</a>
+        <h2>All League Matches</h2>
+        <div class="nav">
+            <a href="/dashboard">Dashboard</a> |
+            <a href="/bookings">Bookings</a> |
+            <a href="/league">League</a> |
+            <a href="/league/matches">All Matches</a>
+        </div>
+    </div>
+
+    <table>
+        <thead>
+            <tr><th>Date</th><th>Time</th><th>Home</th><th>Away</th><th>Score</th><th>Referee</th><th>Status</th></tr>
+        </thead>
+        <tbody>
+            {% for m in matches %}
+            <tr>
+                <td>{{ m[1] }}</td>
+                <td>{{ m[2] }}</td>
+                <td>{{ m[3] }}</td>
+                <td>{{ m[4] }}</td>
+                <td>{% if m[8] == 'played' %}{{ m[5] }} - {{ m[6] }}{% else %}--{% endif %}</td>
+                <td>{{ m[7] }}</td>
+                <td>{{ m[8] }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>
