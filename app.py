@@ -15,7 +15,9 @@ app.secret_key = os.environ.get('SECRET_KEY', 'your-secret-key-change-in-product
 # -----------------------------
 def get_db_connection():
     database_url = os.environ.get('DATABASE_URL')
-    if database_url and database_url.startswith('postgres://'):
+    if not database_url:
+        raise Exception("DATABASE_URL environment variable not set!")
+    if database_url.startswith('postgres://'):
         database_url = database_url.replace('postgres://', 'postgresql://', 1)
     conn = psycopg2.connect(database_url)
     return conn
@@ -201,6 +203,7 @@ def init_db():
     cur.close()
     conn.close()
 
+# Initialize database on startup (if tables don't exist)
 init_db()
 
 # -----------------------------
@@ -1420,16 +1423,18 @@ def analytics_data():
 # -----------------------------
 # TEST ROUTE (optional)
 # -----------------------------
-@app.route("/test")
-def test():
-    conn = get_db_connection()
-    cur = conn.cursor()
-    today = datetime.now().strftime("%Y-%m-%d")
-    cur.execute("SELECT COUNT(*) FROM bookings WHERE date = %s", (today,))
-    count = cur.fetchone()[0]
-    cur.close()
-    conn.close()
-    return f"Bookings for {today}: {count}"
+@app.route("/checkdb")
+def checkdb():
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        cur.execute("SELECT COUNT(*) FROM bookings")
+        count = cur.fetchone()[0]
+        cur.close()
+        conn.close()
+        return f"Database connected. Bookings count: {count}"
+    except Exception as e:
+        return f"Error: {e}"
 
 # -----------------------------
 # RUN
