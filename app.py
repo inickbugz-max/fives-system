@@ -1421,7 +1421,7 @@ def analytics_data():
     })
 
 # -----------------------------
-# TEST ROUTE (optional)
+# TEST ROUTES
 # -----------------------------
 @app.route("/checkdb")
 def checkdb():
@@ -1435,6 +1435,19 @@ def checkdb():
         return f"Database connected. Bookings count: {count}"
     except Exception as e:
         return f"Error: {e}"
+
+@app.route("/debug")
+def debug():
+    import os
+    url = os.environ.get('DATABASE_URL', 'NOT SET')
+    # Hide password for safety
+    if url and '@' in url:
+        parts = url.split('@')
+        user_pass = parts[0].split('://')[1]
+        masked = url.replace(user_pass, '***')
+    else:
+        masked = url
+    return f"DATABASE_URL: {masked}"
 
 # -----------------------------
 # RUN
