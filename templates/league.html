@@ -6,6 +6,15 @@
     <title>League | Fives System</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <style>
+        .card-header { background-color: white; }
+        .table-responsive { overflow-x: auto; }
+        .division-tabs .nav-link { color: #0d6efd; }
+        .division-tabs .nav-link.active { background-color: #0d6efd; color: white; }
+        .paid-badge { background-color: #28a745; }
+        .unpaid-badge { background-color: #dc3545; }
+        .partial-badge { background-color: #ffc107; color: #000; }
+    </style>
 </head>
 <body class="bg-light">
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
@@ -18,6 +27,10 @@
                     <li class="nav-item"><a class="nav-link active" href="/league">League</a></li>
                     <li class="nav-item"><a class="nav-link" href="/reports">Reports</a></li>
                     <li class="nav-item"><a class="nav-link" href="/analytics">Analytics</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/cash">Cash</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/staff">Staff</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/staff/reports">Staff Reports</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/referee/reports">Referee Reports</a></li>
                 </ul>
                 <div class="d-flex">
                     <span class="navbar-text me-3">Welcome, {{ user }}</span>
@@ -28,40 +41,83 @@
     </nav>
 
     <div class="container mt-4">
-        <!-- Add Team -->
+        <!-- Division Tabs -->
+        <ul class="nav nav-tabs division-tabs mb-4">
+            {% for div in divisions %}
+                <li class="nav-item">
+                    <a class="nav-link {% if selected_division == div[0] %}active{% endif %}" 
+                       href="{{ url_for('league', division_id=div[0]) }}">
+                        {{ div[1] }} ({{ div[2] }} min)
+                    </a>
+                </li>
+            {% endfor %}
+        </ul>
+
+        <!-- Add Team Form -->
         <div class="card shadow mb-4">
             <div class="card-header bg-white">
                 <h5 class="mb-0">Add New Team</h5>
             </div>
             <div class="card-body">
                 <form method="post" action="/league/add_team" class="row g-3">
-                    <div class="col-auto">
-                        <input type="text" name="name" class="form-control" placeholder="Team name" required>
+                    <div class="col-md-3"><input type="text" name="name" class="form-control" placeholder="Team name" required></div>
+                    <div class="col-md-3"><input type="text" name="captain" class="form-control" placeholder="Captain name"></div>
+                    <div class="col-md-2"><input type="number" name="total_fee" class="form-control" placeholder="Total Fee (R)" value="0"></div>
+                    <div class="col-md-2">
+                        <select name="division_id" class="form-select" required>
+                            {% for div in divisions %}
+                                <option value="{{ div[0] }}" {% if selected_division == div[0] %}selected{% endif %}>{{ div[1] }}</option>
+                            {% endfor %}
+                        </select>
                     </div>
-                    <div class="col-auto">
-                        <button type="submit" class="btn btn-primary">Add Team</button>
-                    </div>
+                    <div class="col-md-2"><button type="submit" class="btn btn-primary w-100">Add Team</button></div>
                 </form>
             </div>
         </div>
 
         <!-- Standings -->
         <div class="card shadow mb-4">
-            <div class="card-header bg-white">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
                 <h5 class="mb-0">Standings</h5>
             </div>
             <div class="card-body p-0">
                 <div class="table-responsive">
                     <table class="table table-hover mb-0">
                         <thead class="table-light">
-                            <tr><th>Team</th><th>Pld</th><th>W</th><th>D</th><th>L</th><th>GF</th><th>GA</th><th>GD</th><th>Pts</th></tr>
-                        </thead>
+                            <tr>
+                                <th>Team</th><th>Captain</th><th>Total Fee</th><th>Paid</th><th>Balance</th>
+                                <th>Pld</th><th>W</th><th>D</th><th>L</th><th>GF</th><th>GA</th><th>GD</th><th>Pts</th>
+                                <th>Adj</th><th>Action</th>
+                            </thead>
                         <tbody>
                             {% for t in teams %}
                             <tr>
-                                <td>{{ t[1] }}</td><td>{{ t[3] }}</td><td>{{ t[4] }}</td><td>{{ t[5] }}</td><td>{{ t[6] }}</td>
-                                <td>{{ t[7] }}</td><td>{{ t[8] }}</td><td>{{ t[7] - t[8] }}</td><td>{{ t[2] }}</td>
-                            </tr>
+                                <td>{{ t.name }}</td>
+                                <td>{{ t.captain }}</td>
+                                <td>R{{ t.total_fee }}</td>
+                                <td>R{{ t.paid }}</td>
+                                <td>R{{ t.balance }}</td>
+                                <td>{{ t.played }}</td>
+                                <td>{{ t.wins }}</td>
+                                <td>{{ t.draws }}</td>
+                                <td>{{ t.losses }}</td>
+                                <td>{{ t.goals_for }}</td>
+                                <td>{{ t.goals_against }}</td>
+                                <td>{{ t.goals_for - t.goals_against }}</td>
+                                <td>{{ t.points }}</td>
+                                <td>{{ t.points_adj }}</td>
+                                <td>
+                                    <button class="btn btn-sm btn-warning" data-bs-toggle="modal" data-bs-target="#editTeamModal" 
+                                            data-id="{{ t.id }}" data-name="{{ t.name }}" data-points-adj="{{ t.points_adj }}" 
+                                            data-fee="{{ t.total_fee }}">
+                                        Edit
+                                    </button>
+                                    <form method="post" action="/league/delete_team/{{ t.id }}" style="display:inline" 
+                                          onsubmit="return confirm('Delete this team? This will remove all their matches and payments.')">
+                                        <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                                    </form>
+                                  </td>
+                              </tr>
                             {% endfor %}
                         </tbody>
                     </table>
@@ -77,20 +133,38 @@
             <div class="card-body p-0">
                 <div class="table-responsive">
                     <table class="table table-hover mb-0">
-                        <thead class="table-light"><tr><th>Date</th><th>Time</th><th>Home</th><th>Away</th><th>Referee</th><th>Result</th></tr></thead>
+                        <thead class="table-light">
+                            <tr>
+                                <th>Date</th><th>Time</th><th>Home</th><th>Away</th><th>Referee</th>
+                                <th>Payment</th><th>Result</th>
+                            </tr>
+                        </thead>
                         <tbody>
                             {% for m in upcoming %}
-                            <tr>
-                                <td>{{ m[1] }}</td><td>{{ m[2] }}</td><td>{{ m[3] }}</td><td>{{ m[4] }}</td><td>{{ m[5] }}</td>
-                                <td>
-                                    <form method="post" action="/league/record_result" class="row g-1">
+                             <tr>
+                                 <td>{{ m[1] }}</td>
+                                 <td>{{ m[2] }}</td>
+                                 <td>{{ m[3] }}</td>
+                                 <td>{{ m[4] }}</td>
+                                 <td>{{ m[5] }}</td>
+                                 <td>
+                                    {% if m[7] == 'paid' %}
+                                        <span class="badge paid-badge">Paid (R{{ m[9] }}/R{{ m[8] }})</span>
+                                    {% elif m[7] == 'partial' %}
+                                        <span class="badge partial-badge">Partial (R{{ m[9] }}/R{{ m[8] }})</span>
+                                    {% else %}
+                                        <span class="badge unpaid-badge">Unpaid (R{{ m[9] }}/R{{ m[8] }})</span>
+                                    {% endif %}
+                                 </td>
+                                 <td>
+                                    <form method="post" action="/league/update_score" class="row g-1">
                                         <input type="hidden" name="match_id" value="{{ m[0] }}">
                                         <div class="col-auto"><input type="number" name="home_score" placeholder="H" class="form-control form-control-sm" style="width:60px" required></div>
                                         <div class="col-auto"><input type="number" name="away_score" placeholder="A" class="form-control form-control-sm" style="width:60px" required></div>
                                         <div class="col-auto"><button type="submit" class="btn btn-sm btn-primary">Record</button></div>
                                     </form>
-                                </td>
-                            </tr>
+                                 </td>
+                             </tr>
                             {% endfor %}
                         </tbody>
                     </table>
@@ -106,41 +180,108 @@
             <div class="card-body p-0">
                 <div class="table-responsive">
                     <table class="table table-hover mb-0">
-                        <thead class="table-light"><tr><th>Date</th><th>Time</th><th>Home</th><th>Away</th><th>Score</th><th>Referee</th></tr></thead>
+                        <thead class="table-light">
+                            <tr>
+                                <th>Date</th><th>Time</th><th>Home</th><th>Away</th><th>Score</th>
+                                <th>Referee</th><th>Payment</th><th>Action</th>
+                             </tr>
+                        </thead>
                         <tbody>
                             {% for m in played %}
-                            <tr>
-                                <td>{{ m[1] }}</td><td>{{ m[2] }}</td><td>{{ m[3] }}</td><td>{{ m[4] }}</td>
-                                <td>{{ m[5] }} - {{ m[6] }}</td><td>{{ m[7] }}</td>
-                            </tr>
+                             <tr>
+                                 <td>{{ m[1] }}</td>
+                                 <td>{{ m[2] }}</td>
+                                 <td>{{ m[3] }}</td>
+                                 <td>{{ m[4] }}</td>
+                                 <td>
+                                    <form method="post" action="/league/edit_score/{{ m[0] }}" style="display:inline" class="row g-1">
+                                        <div class="col-auto"><input type="number" name="home_score" value="{{ m[5] }}" class="form-control form-control-sm" style="width:60px" required></div>
+                                        <div class="col-auto">-</div>
+                                        <div class="col-auto"><input type="number" name="away_score" value="{{ m[6] }}" class="form-control form-control-sm" style="width:60px" required></div>
+                                        <div class="col-auto"><button type="submit" class="btn btn-sm btn-warning">Edit</button></div>
+                                    </form>
+                                 </td>
+                                 <td>{{ m[7] }}</td>
+                                 <td>
+                                    {% if m[8] == 'paid' %}
+                                        <span class="badge paid-badge">Paid (R{{ m[10] }}/R{{ m[9] }})</span>
+                                    {% elif m[8] == 'partial' %}
+                                        <span class="badge partial-badge">Partial (R{{ m[10] }}/R{{ m[9] }})</span>
+                                    {% else %}
+                                        <span class="badge unpaid-badge">Unpaid (R{{ m[10] }}/R{{ m[9] }})</span>
+                                    {% endif %}
+                                    {% if m[8] != 'paid' %}
+                                    <form method="post" action="/league/mark_paid/{{ m[0] }}" style="display:inline">
+                                        <button type="submit" class="btn btn-sm btn-success mt-1">Mark Paid</button>
+                                    </form>
+                                    {% endif %}
+                                 </td>
+                                 <td>
+                                    <button class="btn btn-sm btn-info view-payments-btn" data-match-id="{{ m[0] }}">View Payments</button>
+                                 </td>
+                             </tr>
                             {% endfor %}
                         </tbody>
                     </table>
                 </div>
             </div>
         </div>
+    </div>
 
-        <!-- Team Payments -->
-        <div class="card shadow">
-            <div class="card-header bg-white">
-                <h5 class="mb-0">Team Payments</h5>
-            </div>
-            <div class="card-body">
-                <form method="post" action="/league/team_payment" class="row g-3 mb-3">
-                    <div class="col-auto"><select name="team_id" class="form-select" required><option value="">Select Team</option>{% for t in teams %}<option value="{{ t[0] }}">{{ t[1] }}</option>{% endfor %}</select></div>
-                    <div class="col-auto"><input type="number" name="amount" placeholder="Amount (R)" class="form-control" required></div>
-                    <div class="col-auto"><select name="method" class="form-select"><option value="cash">Cash</option><option value="card">Card</option><option value="eft">EFT</option></select></div>
-                    <div class="col-auto"><input type="text" name="notes" placeholder="Notes" class="form-control"></div>
-                    <div class="col-auto"><button type="submit" class="btn btn-primary">Record Payment</button></div>
+    <!-- Edit Team Modal -->
+    <div class="modal fade" id="editTeamModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form method="post" action="#" id="editTeamForm">
+                    <div class="modal-header"><h5 class="modal-title">Edit Team</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                    <div class="modal-body">
+                        <div class="mb-3"><label class="form-label">Team Name</label><input type="text" id="team_name" class="form-control" disabled></div>
+                        <div class="mb-3"><label class="form-label">Points Adjustment (+ or -)</label><input type="number" name="points_adj" id="points_adj" class="form-control" placeholder="e.g., -3 for deduction, +2 for addition"></div>
+                        <div class="mb-3"><label class="form-label">Total League Fee (R)</label><input type="number" name="total_fee" id="total_fee" class="form-control"></div>
+                    </div>
+                    <div class="modal-footer"><button type="submit" class="btn btn-primary">Save Changes</button><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button></div>
                 </form>
-                <div class="table-responsive">
-                    <table class="table table-sm">
-                        <thead><tr><th>Team</th><th>Total Paid</th></tr></thead>
-                        <tbody>{% for p in payments %}<tr><td>{{ p[0] }}</td><td>R{{ p[1] }}</td></tr>{% endfor %}</tbody>
-                    </table>
-                </div>
             </div>
         </div>
     </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Edit Team Modal
+        const editTeamModal = document.getElementById('editTeamModal');
+        editTeamModal.addEventListener('show.bs.modal', function(event) {
+            const button = event.relatedTarget;
+            const teamId = button.getAttribute('data-id');
+            const teamName = button.getAttribute('data-name');
+            const pointsAdj = button.getAttribute('data-points-adj');
+            const fee = button.getAttribute('data-fee');
+            
+            document.getElementById('team_name').value = teamName;
+            document.getElementById('points_adj').value = pointsAdj;
+            document.getElementById('total_fee').value = fee;
+            document.getElementById('editTeamForm').action = '/league/edit_team/' + teamId;
+        });
+
+        // View Payments buttons
+        document.querySelectorAll('.view-payments-btn').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                const matchId = this.getAttribute('data-match-id');
+                fetch('/api/payments/' + matchId)
+                    .then(function(response) { return response.json(); })
+                    .then(function(data) {
+                        let message = 'Payment History:\n';
+                        if (data.length === 0) {
+                            message += 'No payments recorded yet.';
+                        } else {
+                            data.forEach(function(p) {
+                                message += p.payer + ': R' + p.amount + ' (' + p.method + ') on ' + p.date + '\n';
+                            });
+                        }
+                        alert(message);
+                    })
+                    .catch(function() { alert('Error loading payment history.'); });
+            });
+        });
+    </script>
 </body>
 </html>

@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Referee Reports | Fives System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+</head>
+<body class="bg-light">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/dashboard">Fives System</a>
+            <div class="collapse navbar-collapse">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <li class="nav-item"><a class="nav-link" href="/dashboard">Dashboard</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/bookings">Bookings</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/league">League</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/reports">Reports</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/analytics">Analytics</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/cash">Cash</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/staff">Staff</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/staff/reports">Staff Reports</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="/referee/reports">Referee Reports</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/daily-report">Daily Report</a></li>
+                </ul>
+                <div class="d-flex">
+                    <span class="navbar-text me-3">Welcome, {{ user }}</span>
+                    <a href="/logout" class="btn btn-outline-light btn-sm">Logout</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <!-- Date Range Filter -->
+        <div class="card shadow mb-4">
+            <div class="card-header bg-white">
+                <h5 class="mb-0">Date Range</h5>
+            </div>
+            <div class="card-body">
+                <form method="get" action="/referee/reports" class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label">From Date</label>
+                        <input type="date" name="from_date" value="{{ from_date }}" class="form-control" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">To Date</label>
+                        <input type="date" name="to_date" value="{{ to_date }}" class="form-control" required>
+                    </div>
+                    <div class="col-md-4 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary">Filter</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Referee Summary -->
+        <div class="card shadow mb-4">
+            <div class="card-header bg-white">
+                <h5 class="mb-0">Referee Summary ({{ from_date }} to {{ to_date }})</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Referee Name</th>
+                                <th>Total Games</th>
+                                <th>Total Fees</th>
+                                <th>Total Paid</th>
+                                <th>Balance</th>
+                            </thead>
+                        <tbody>
+                            {% for r in referee_summary %}
+                            <tr>
+                                <td>{{ r[0] }}</td>
+                                <td>{{ r[1] }}</td>
+                                <td>R{{ r[2] }}</td>
+                                <td>R{{ r[3] }}</td>
+                                <td>R{{ r[4] }}</td>
+                            </tr>
+                            {% else %}
+                             <tr><td colspan="5" class="text-center text-muted">No referee records found for this period.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Detailed Referee Games -->
+        <div class="card shadow">
+            <div class="card-header bg-white">
+                <h5 class="mb-0">Detailed Referee Games</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                             <tr>
+                                <th>Date</th>
+                                <th>Referee</th>
+                                <th>Home Team</th>
+                                <th>Away Team</th>
+                                <th>Fee</th>
+                                <th>Paid</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for game in referee_games %}
+                            <tr>
+                                <td>{{ game[2] }}</td>          <!-- date -->
+                                <td>{{ game[1] }}</td>          <!-- referee_name -->
+                                <td>{{ game[3] }}</td>          <!-- home_team -->
+                                <td>{{ game[4] }}</td>          <!-- away_team -->
+                                <td>
+                                    <form method="post" action="/api/referee/update_fee" style="display:inline">
+                                        <input type="hidden" name="record_id" value="{{ game[0] }}">
+                                        <input type="hidden" name="from_date" value="{{ from_date }}">
+                                        <input type="hidden" name="to_date" value="{{ to_date }}">
+                                        <input type="number" name="fee" value="{{ game[5] }}" class="form-control form-control-sm" style="width:80px; display:inline-block">
+                                        <button type="submit" class="btn btn-sm btn-warning">Update</button>
+                                    </form>
+                                </td>
+                                <td>
+                                    {% if game[6] > 0 %}
+                                        R{{ game[6] }}
+                                    {% else %}
+                                        R0
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if game[6] == 0 or game[6] is none %}
+                                    <form method="post" action="/api/referee/mark_paid" style="display:inline">
+                                        <input type="hidden" name="record_id" value="{{ game[0] }}">
+                                        <input type="hidden" name="from_date" value="{{ from_date }}">
+                                        <input type="hidden" name="to_date" value="{{ to_date }}">
+                                        <button type="submit" class="btn btn-sm btn-success">Mark Paid</button>
+                                    </form>
+                                    {% else %}
+                                    <span class="badge bg-success">Paid</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr><td colspan="7" class="text-center text-muted">No games recorded for this period.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

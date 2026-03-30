@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Staff Reports | Fives System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+</head>
+<body class="bg-light">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/dashboard">Fives System</a>
+            <div class="collapse navbar-collapse">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <li class="nav-item"><a class="nav-link" href="/dashboard">Dashboard</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/bookings">Bookings</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/league">League</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/reports">Reports</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/analytics">Analytics</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/cash">Cash</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/staff">Staff</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="/staff/reports">Staff Reports</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/referee/reports">Referee Reports</a></li>
+                </ul>
+                <div class="d-flex">
+                    <span class="navbar-text me-3">Welcome, {{ user }}</span>
+                    <a href="/logout" class="btn btn-outline-light btn-sm">Logout</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <div class="card shadow mb-4">
+            <div class="card-header bg-white">
+                <h5 class="mb-0">Date Range</h5>
+            </div>
+            <div class="card-body">
+                <form method="get" action="/staff/reports" class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label">From Date</label>
+                        <input type="date" name="from_date" value="{{ from_date }}" class="form-control" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">To Date</label>
+                        <input type="date" name="to_date" value="{{ to_date }}" class="form-control" required>
+                    </div>
+                    <div class="col-md-4 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary">Filter</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="card shadow mb-4">
+            <div class="card-header bg-white">
+                <h5 class="mb-0">Staff Summary ({{ from_date }} to {{ to_date }})</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr><th>Staff Name</th><th>Total Days Worked</th><th>Total Shifts</th><th>Shifts Types</th></tr>
+                        </thead>
+                        <tbody>
+                            {% for s in staff_summary %}
+                            <tr><td>{{ s[1] }}</td><td>{{ s[2] }}</td><td>{{ s[3] }}</td><td>{{ s[4] if s[4] else 'N/A' }}</td></tr>
+                            {% else %}
+                            <td><td colspan="4" class="text-center text-muted">No staff records found for this period.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="card shadow">
+            <div class="card-header bg-white">
+                <h5 class="mb-0">Detailed Staff Shifts</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr><th>Staff Name</th><th>Date</th><th>Shift</th></tr>
+                        </thead>
+                        <tbody>
+                            {% for shift in staff_shifts %}
+                            <tr><td>{{ shift[0] }}</td><td>{{ shift[1] }}</td><td>{{ shift[2] }}</td></tr>
+                            {% else %}
+                            <td><td colspan="3" class="text-center text-muted">No shifts recorded for this period.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
