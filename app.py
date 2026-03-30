@@ -15,7 +15,7 @@ def init_db():
     conn = sqlite3.connect("database.db")
     c = conn.cursor()
 
-    # Bookings table - CORRECT COLUMN ORDER
+    # Bookings table
     c.execute("""
         CREATE TABLE IF NOT EXISTS bookings (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -31,12 +31,6 @@ def init_db():
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     """)
-
-    # Add duration column if missing
-    try:
-        c.execute("ALTER TABLE bookings ADD COLUMN duration INTEGER DEFAULT 1")
-    except sqlite3.OperationalError:
-        pass
 
     # Social payments table
     c.execute("""
@@ -277,13 +271,10 @@ def dashboard():
         for c_name in courts:
             schedule[t][c_name] = None
     for b in bookings:
-        # Column indices for bookings table:
-        # 0=id, 1=name, 2=phone, 3=court, 4=time, 5=date, 6=booking_type, 7=amount, 8=paid, 9=duration, 10=created_at
         time_val = b[4]
         court_val = b[3]
         schedule[time_val][court_val] = b
 
-    # Calculate totals
     total_bookings_day = len(bookings)
     total_amount_day = sum(int(b[7]) for b in bookings if b[7]) if bookings else 0
     total_paid_day = sum(int(b[8]) for b in bookings if b[8]) if bookings else 0
@@ -391,7 +382,7 @@ def dashboard():
     )
 
 # -----------------------------
-# ADD BOOKING (with duration booking)
+# ADD BOOKING
 # -----------------------------
 @app.route("/add", methods=["POST"])
 def add_booking():
@@ -406,7 +397,6 @@ def add_booking():
     duration = int(request.form.get("duration", 1))
     today = datetime.now().strftime("%Y-%m-%d")
     
-    # Amount is only for social, league, and open_social
     amount = 0
     if booking_type in ['social', 'league', 'open_social']:
         amount = int(request.form.get("amount", 0))
@@ -414,10 +404,7 @@ def add_booking():
     conn = sqlite3.connect("database.db")
     c = conn.cursor()
 
-    # Parse the start time hour
     start_hour = int(time.split(':')[0])
-    
-    # Check all required slots are available
     conflict = False
     for i in range(duration):
         slot_hour = start_hour + i
@@ -437,12 +424,10 @@ def add_booking():
         conn.close()
         return redirect(url_for("dashboard", error="Time slot(s) not available for full duration"))
 
-    # Insert all bookings for each hour of the duration
     booking_ids = []
     for i in range(duration):
         slot_hour = start_hour + i
         slot_time = f"{slot_hour:02d}:00"
-        
         c.execute("""
             INSERT INTO bookings (name, phone, court, time, date, booking_type, amount, paid, duration)
             VALUES (?, ?, ?, ?, ?, ?, ?, 0, ?)
@@ -450,7 +435,6 @@ def add_booking():
         booking_id = c.lastrowid
         booking_ids.append(booking_id)
 
-    # If league booking, create league match only for the first booking slot
     if booking_type == "league":
         division_id = request.form.get("division_id")
         home_team_id = request.form.get("home_team_id")
@@ -500,12 +484,10 @@ def record_payment(booking_id):
             amount = int(request.form["amount"])
             method = request.form["method"]
             notes = request.form.get("notes", "")
-            
             c.execute("""
                 INSERT INTO league_payments (booking_id, team_id, player_name, amount, method, date, notes)
                 VALUES (?, ?, ?, ?, ?, ?, ?)
             """, (booking_id, team_id, player_name, amount, method, today, notes))
-            
             c.execute("""
                 UPDATE league_matches 
                 SET paid_amount = paid_amount + ?, 
@@ -551,14 +533,12 @@ def get_payments(booking_id):
 
     conn = sqlite3.connect("database.db")
     c = conn.cursor()
-    
     social_payments = c.execute("""
         SELECT payer_name, amount, method, date, 'social' as type, NULL as team_name
         FROM payments
         WHERE booking_id = ?
         ORDER BY created_at
     """, (booking_id,)).fetchall()
-    
     league_payments = c.execute("""
         SELECT lp.player_name, lp.amount, lp.method, lp.date, 'league' as type, t.name as team_name
         FROM league_payments lp
@@ -566,7 +546,6 @@ def get_payments(booking_id):
         WHERE lp.booking_id = ?
         ORDER BY lp.created_at
     """, (booking_id,)).fetchall()
-    
     conn.close()
 
     all_payments = []
@@ -923,7 +902,6 @@ def daily_report():
     conn = sqlite3.connect("database.db")
     c = conn.cursor()
     
-    # Get all non-league bookings for the day
     other_bookings = c.execute("""
         SELECT id, name, phone, court, time, date, booking_type, amount, paid, duration
         FROM bookings 
@@ -931,7 +909,6 @@ def daily_report():
         ORDER BY time
     """, (date_str,)).fetchall()
     
-    # Get all league matches for the day
     league_matches = c.execute("""
         SELECT lm.id, b.time, t1.name, t2.name, lm.referee, b.amount, lm.paid_amount, lm.payment_status, b.id as booking_id
         FROM league_matches lm
@@ -942,7 +919,6 @@ def daily_report():
         ORDER BY b.time
     """, (date_str,)).fetchall()
     
-    # Get all payments for social bookings on this day
     social_payments = c.execute("""
         SELECT p.booking_id, p.payer_name, p.amount, p.method, p.date
         FROM payments p
@@ -951,7 +927,6 @@ def daily_report():
         ORDER BY p.created_at
     """, (date_str,)).fetchall()
     
-    # Get all payments for league bookings on this day
     league_payments = c.execute("""
         SELECT lp.booking_id, lp.player_name, t.name as team_name, lp.amount, lp.method, lp.date
         FROM league_payments lp
@@ -961,7 +936,6 @@ def daily_report():
         ORDER BY lp.created_at
     """, (date_str,)).fetchall()
     
-    # Get today's expenses
     expenses = c.execute("""
         SELECT id, supplier, invoice_no, amount, reason, created_at
         FROM expenses
@@ -969,7 +943,6 @@ def daily_report():
         ORDER BY created_at
     """, (date_str,)).fetchall()
     
-    # Get staff on duty
     staff_on_duty = c.execute("""
         SELECT s.name, sd.shift
         FROM staff_duty sd
@@ -980,7 +953,6 @@ def daily_report():
     
     conn.close()
     
-    # Calculate totals for social only
     social_total_amount = sum(b[7] for b in other_bookings if b[6] == 'social') if other_bookings else 0
     social_total_paid = sum(b[8] for b in other_bookings if b[6] == 'social') if other_bookings else 0
     social_total_balance = social_total_amount - social_total_paid
@@ -1500,6 +1472,19 @@ def analytics_data():
         "weekly": [{"week": w[0], "revenue": w[1]} for w in weekly_revenue],
         "methods": [{"method": m[0], "total": m[1]} for m in method_breakdown]
     })
+
+# -----------------------------
+# TEST ROUTE (temporary – check bookings for today)
+# -----------------------------
+@app.route("/test")
+def test():
+    import sqlite3
+    conn = sqlite3.connect("database.db")
+    c = conn.cursor()
+    today = datetime.now().strftime("%Y-%m-%d")
+    count = c.execute("SELECT COUNT(*) FROM bookings WHERE date = ?", (today,)).fetchone()[0]
+    conn.close()
+    return f"Bookings for {today}: {count}"
 
 # -----------------------------
 # RUN
