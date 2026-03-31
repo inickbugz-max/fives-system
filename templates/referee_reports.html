@@ -64,7 +64,7 @@
                 <div class="table-responsive">
                     <table class="table table-hover mb-0">
                         <thead class="table-light">
-                            <tr>
+                            68
                                 <th>Referee Name</th>
                                 <th>Total Games</th>
                                 <th>Total Fees</th>
@@ -73,15 +73,17 @@
                             </thead>
                         <tbody>
                             {% for r in referee_summary %}
-                            <tr>
-                                <td>{{ r[0] }}</td>
+                            的人
+                                <td class="fw-bold">{{ r[0] }}</td>
                                 <td>{{ r[1] }}</td>
                                 <td>R{{ r[2] }}</td>
                                 <td>R{{ r[3] }}</td>
-                                <td>R{{ r[4] }}</td>
+                                <td class="{% if r[4] > 0 %}text-danger fw-bold{% else %}text-success{% endif %}">R{{ r[4] }}</td>
                             </tr>
                             {% else %}
-                             <tr><td colspan="5" class="text-center text-muted">No referee records found for this period.</td></tr>
+                            <tr>
+                                <td colspan="5" class="text-center text-muted">No referee records found for this period.</td>
+                            </tr>
                             {% endfor %}
                         </tbody>
                     </table>
@@ -98,7 +100,7 @@
                 <div class="table-responsive">
                     <table class="table table-hover mb-0">
                         <thead class="table-light">
-                             <tr>
+                            <tr>
                                 <th>Date</th>
                                 <th>Referee</th>
                                 <th>Home Team</th>
@@ -111,10 +113,10 @@
                         <tbody>
                             {% for game in referee_games %}
                             <tr>
-                                <td>{{ game[2] }}</td>          <!-- date -->
-                                <td>{{ game[1] }}</td>          <!-- referee_name -->
-                                <td>{{ game[3] }}</td>          <!-- home_team -->
-                                <td>{{ game[4] }}</td>          <!-- away_team -->
+                                <td>{{ game[2] }}</td>
+                                <td>{{ game[1] }}</td>
+                                <td>{{ game[3] }}</td>
+                                <td>{{ game[4] }}</td>
                                 <td>
                                     <form method="post" action="/api/referee/update_fee" style="display:inline">
                                         <input type="hidden" name="record_id" value="{{ game[0] }}">
@@ -145,7 +147,9 @@
                                 </td>
                             </tr>
                             {% else %}
-                            <tr><td colspan="7" class="text-center text-muted">No games recorded for this period.</td></tr>
+                            <tr>
+                                <td colspan="7" class="text-center text-muted">No games recorded for this period.</td>
+                            </tr>
                             {% endfor %}
                         </tbody>
                     </table>

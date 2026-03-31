@@ -31,6 +31,7 @@
                     <li class="nav-item"><a class="nav-link" href="/staff">Staff</a></li>
                     <li class="nav-item"><a class="nav-link" href="/staff/reports">Staff Reports</a></li>
                     <li class="nav-item"><a class="nav-link" href="/referee/reports">Referee Reports</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/daily-report">Daily Report</a></li>
                 </ul>
                 <div class="d-flex">
                     <span class="navbar-text me-3">Welcome, {{ user }}</span>
@@ -45,7 +46,7 @@
         <ul class="nav nav-tabs division-tabs mb-4">
             {% for div in divisions %}
                 <li class="nav-item">
-                    <a class="nav-link {% if selected_division == div[0] %}active{% endif %}" 
+                    <a class="nav-link {% if selected_division == div[0] %}active{% endif %}"
                        href="{{ url_for('league', division_id=div[0]) }}">
                         {{ div[1] }} ({{ div[2] }} min)
                     </a>
@@ -53,7 +54,7 @@
             {% endfor %}
         </ul>
 
-        <!-- Add Team Form -->
+        <!-- Add Team Form (same as before) -->
         <div class="card shadow mb-4">
             <div class="card-header bg-white">
                 <h5 class="mb-0">Add New Team</h5>
@@ -75,47 +76,47 @@
             </div>
         </div>
 
-        <!-- Standings -->
+        <!-- Standings (same as before) -->
         <div class="card shadow mb-4">
-            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+            <div class="card-header bg-white">
                 <h5 class="mb-0">Standings</h5>
             </div>
             <div class="card-body p-0">
                 <div class="table-responsive">
                     <table class="table table-hover mb-0">
                         <thead class="table-light">
-                            <tr>
+                            68
                                 <th>Team</th><th>Captain</th><th>Total Fee</th><th>Paid</th><th>Balance</th>
                                 <th>Pld</th><th>W</th><th>D</th><th>L</th><th>GF</th><th>GA</th><th>GD</th><th>Pts</th>
                                 <th>Adj</th><th>Action</th>
                             </thead>
                         <tbody>
                             {% for t in teams %}
-                            <tr>
-                                <td>{{ t.name }}</td>
-                                <td>{{ t.captain }}</td>
-                                <td>R{{ t.total_fee }}</td>
-                                <td>R{{ t.paid }}</td>
-                                <td>R{{ t.balance }}</td>
-                                <td>{{ t.played }}</td>
-                                <td>{{ t.wins }}</td>
-                                <td>{{ t.draws }}</td>
-                                <td>{{ t.losses }}</td>
-                                <td>{{ t.goals_for }}</td>
-                                <td>{{ t.goals_against }}</td>
-                                <td>{{ t.goals_for - t.goals_against }}</td>
-                                <td>{{ t.points }}</td>
-                                <td>{{ t.points_adj }}</td>
-                                <td>
-                                    <button class="btn btn-sm btn-warning" data-bs-toggle="modal" data-bs-target="#editTeamModal" 
-                                            data-id="{{ t.id }}" data-name="{{ t.name }}" data-points-adj="{{ t.points_adj }}" 
-                                            data-fee="{{ t.total_fee }}">
-                                        Edit
-                                    </button>
-                                    <form method="post" action="/league/delete_team/{{ t.id }}" style="display:inline" 
-                                          onsubmit="return confirm('Delete this team? This will remove all their matches and payments.')">
-                                        <button type="submit" class="btn btn-sm btn-danger">Delete</button>
-                                    </form>
+                              <tr>
+                                  <td>{{ t.name }}</td>
+                                  <td>{{ t.captain }}</td>
+                                  <td>R{{ t.total_fee }}</td>
+                                  <td>R{{ t.paid }}</td>
+                                  <td>R{{ t.balance }}</td>
+                                  <td>{{ t.played }}</td>
+                                  <td>{{ t.wins }}</td>
+                                  <td>{{ t.draws }}</td>
+                                  <td>{{ t.losses }}</td>
+                                  <td>{{ t.goals_for }}</td>
+                                  <td>{{ t.goals_against }}</td>
+                                  <td>{{ t.goals_for - t.goals_against }}</td>
+                                  <td>{{ t.points }}</td>
+                                  <td>{{ t.points_adj }}</td>
+                                  <td>
+                                      <button class="btn btn-sm btn-warning" data-bs-toggle="modal" data-bs-target="#editTeamModal"
+                                              data-id="{{ t.id }}" data-name="{{ t.name }}" data-points-adj="{{ t.points_adj }}"
+                                              data-fee="{{ t.total_fee }}">
+                                          Edit
+                                      </button>
+                                      <form method="post" action="/league/delete_team/{{ t.id }}" style="display:inline"
+                                            onsubmit="return confirm('Delete this team? This will remove all their matches and payments.')">
+                                          <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                                      </form>
                                   </td>
                               </tr>
                             {% endfor %}
@@ -141,13 +142,13 @@
                         </thead>
                         <tbody>
                             {% for m in upcoming %}
-                             <tr>
-                                 <td>{{ m[1] }}</td>
-                                 <td>{{ m[2] }}</td>
-                                 <td>{{ m[3] }}</td>
-                                 <td>{{ m[4] }}</td>
-                                 <td>{{ m[5] }}</td>
-                                 <td>
+                            <tr>
+                                <td>{{ m[1] }}</td>
+                                <td>{{ m[2] }}</td>
+                                <td>{{ m[3] }}</td>
+                                <td>{{ m[4] }}</td>
+                                <td>{{ m[5] }}</td>
+                                <td>
                                     {% if m[7] == 'paid' %}
                                         <span class="badge paid-badge">Paid (R{{ m[9] }}/R{{ m[8] }})</span>
                                     {% elif m[7] == 'partial' %}
@@ -155,16 +156,16 @@
                                     {% else %}
                                         <span class="badge unpaid-badge">Unpaid (R{{ m[9] }}/R{{ m[8] }})</span>
                                     {% endif %}
-                                 </td>
-                                 <td>
+                                </td>
+                                <td>
                                     <form method="post" action="/league/update_score" class="row g-1">
                                         <input type="hidden" name="match_id" value="{{ m[0] }}">
                                         <div class="col-auto"><input type="number" name="home_score" placeholder="H" class="form-control form-control-sm" style="width:60px" required></div>
                                         <div class="col-auto"><input type="number" name="away_score" placeholder="A" class="form-control form-control-sm" style="width:60px" required></div>
                                         <div class="col-auto"><button type="submit" class="btn btn-sm btn-primary">Record</button></div>
                                     </form>
-                                 </td>
-                             </tr>
+                                </td>
+                            </tr>
                             {% endfor %}
                         </tbody>
                     </table>
@@ -184,25 +185,25 @@
                             <tr>
                                 <th>Date</th><th>Time</th><th>Home</th><th>Away</th><th>Score</th>
                                 <th>Referee</th><th>Payment</th><th>Action</th>
-                             </tr>
+                            </tr>
                         </thead>
                         <tbody>
                             {% for m in played %}
-                             <tr>
-                                 <td>{{ m[1] }}</td>
-                                 <td>{{ m[2] }}</td>
-                                 <td>{{ m[3] }}</td>
-                                 <td>{{ m[4] }}</td>
-                                 <td>
+                            <tr>
+                                <td>{{ m[1] }}</td>
+                                <td>{{ m[2] }}</td>
+                                <td>{{ m[3] }}</td>
+                                <td>{{ m[4] }}</td>
+                                <td>
                                     <form method="post" action="/league/edit_score/{{ m[0] }}" style="display:inline" class="row g-1">
                                         <div class="col-auto"><input type="number" name="home_score" value="{{ m[5] }}" class="form-control form-control-sm" style="width:60px" required></div>
                                         <div class="col-auto">-</div>
                                         <div class="col-auto"><input type="number" name="away_score" value="{{ m[6] }}" class="form-control form-control-sm" style="width:60px" required></div>
                                         <div class="col-auto"><button type="submit" class="btn btn-sm btn-warning">Edit</button></div>
                                     </form>
-                                 </td>
-                                 <td>{{ m[7] }}</td>
-                                 <td>
+                                </td>
+                                <td>{{ m[7] }}</td>
+                                <td>
                                     {% if m[8] == 'paid' %}
                                         <span class="badge paid-badge">Paid (R{{ m[10] }}/R{{ m[9] }})</span>
                                     {% elif m[8] == 'partial' %}
@@ -215,11 +216,11 @@
                                         <button type="submit" class="btn btn-sm btn-success mt-1">Mark Paid</button>
                                     </form>
                                     {% endif %}
-                                 </td>
-                                 <td>
+                                </td>
+                                <td>
                                     <button class="btn btn-sm btn-info view-payments-btn" data-match-id="{{ m[0] }}">View Payments</button>
-                                 </td>
-                             </tr>
+                                </td>
+                            </tr>
                             {% endfor %}
                         </tbody>
                     </table>
@@ -255,7 +256,7 @@
             const teamName = button.getAttribute('data-name');
             const pointsAdj = button.getAttribute('data-points-adj');
             const fee = button.getAttribute('data-fee');
-            
+
             document.getElementById('team_name').value = teamName;
             document.getElementById('points_adj').value = pointsAdj;
             document.getElementById('total_fee').value = fee;

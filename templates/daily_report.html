@@ -86,15 +86,16 @@
                 <div class="table-responsive">
                     <table class="table table-bordered mb-0">
                         <thead class="table-light">
-                            68
+                            <tr>
                                 <th>Time</th><th>Duration</th><th>Court</th><th>Customer Name</th><th>Phone</th>
                                 <th>Booking Type</th><th>Amount (R)</th><th>Paid (R)</th><th>Balance (R)</th><th class="no-print">Status</th>
-                            </thead>
+                            </tr>
+                        </thead>
                         <tbody>
                             {% for b in other_bookings %}
                             {# Indices: 0=id,1=name,2=phone,3=court,4=time,5=date,6=booking_type,7=amount,8=paid,9=duration #}
                             <tr>
-                                <td>{{ b[4] }}</td>
+                                <td class="fw-bold">{{ b[4] }}</td>
                                 <td>{% if b[9] and b[9]|int > 1 %}{{ b[9] }} hrs{% else %}1 hr{% endif %}</td>
                                 <td>{{ b[3] }}</td>
                                 <td>{{ b[1] }}</td>
@@ -105,28 +106,28 @@
                                         {{ type_str.replace('_', ' ').title() }}
                                     </span>
                                 </td>
-                                 <td>
+                                <td>
                                     {% if type_str in ['social', 'open_social'] %}
                                         R{{ b[7] }}
                                     {% else %}
                                         <span class="text-muted">N/A</span>
                                     {% endif %}
-                                 </td>
-                                 <td>
+                                </td>
+                                <td>
                                     {% if type_str in ['social', 'open_social'] %}
                                         R{{ b[8] }}
                                     {% else %}
                                         <span class="text-muted">N/A</span>
                                     {% endif %}
-                                 </td>
-                                 <td class="{% if b[7] - b[8] > 0 %}text-danger fw-bold{% else %}text-success fw-bold{% endif %}">
+                                </td>
+                                <td class="{% if b[7] - b[8] > 0 %}text-danger fw-bold{% else %}text-success fw-bold{% endif %}">
                                     {% if type_str in ['social', 'open_social'] %}
                                         R{{ b[7] - b[8] }}
                                     {% else %}
                                         <span class="text-muted">N/A</span>
                                     {% endif %}
-                                 </td>
-                                 <td class="no-print">
+                                </td>
+                                <td class="no-print">
                                     {% if type_str in ['social', 'open_social'] and b[7] - b[8] > 0 %}
                                     <form method="post" action="/api/mark-social-complete/{{ b[0] }}" style="display:inline">
                                         <input type="hidden" name="date" value="{{ date }}">
@@ -137,8 +138,8 @@
                                     {% elif type_str in ['social', 'open_social'] and b[7] - b[8] == 0 %}
                                         <span class="badge bg-success">Complete</span>
                                     {% endif %}
-                                 </td>
-                             </tr>
+                                </td>
+                            </tr>
                             {% endfor %}
                         </tbody>
                     </table>
@@ -155,14 +156,15 @@
                 <div class="table-responsive">
                     <table class="table table-bordered mb-0">
                         <thead class="table-light">
-                            68
+                            <tr>
                                 <th>Time</th><th>Home Team</th><th>Away Team</th><th>Referee</th>
                                 <th>Amount (R)</th><th>Paid (R)</th><th>Balance (R)</th><th>Status</th><th class="no-print">Action</th>
-                            </thead>
+                            </tr>
+                        </thead>
                         <tbody>
                             {% for m in league_matches %}
                             {# Indices: 0=match_id,1=time,2=home,3=away,4=referee,5=amount,6=paid,7=status,8=booking_id #}
-                             <tr>
+                            <tr>
                                 <td>{{ m[1] }}</td>
                                 <td>{{ m[2] }}</td>
                                 <td>{{ m[3] }}</td>
@@ -211,7 +213,7 @@
                         <div class="table-responsive">
                             <table class="table table-sm mb-0">
                                 <thead class="table-light">
-                                     <tr><th>Booking ID</th><th>Paid By</th><th>Amount</th><th>Method</th><th>Time</th></tr>
+                                    <tr><th>Booking ID</th><th>Paid By</th><th>Amount</th><th>Method</th><th>Time</th></tr>
                                 </thead>
                                 <tbody>
                                     {% for p in social_payments %}
@@ -241,7 +243,7 @@
                         <div class="table-responsive">
                             <table class="table table-sm mb-0">
                                 <thead class="table-light">
-                                     <tr><th>Booking ID</th><th>Team</th><th>Paid By</th><th>Amount</th><th>Method</th><th>Time</th></tr>
+                                    <tr><th>Booking ID</th><th>Team</th><th>Paid By</th><th>Amount</th><th>Method</th><th>Time</th></tr>
                                 </thead>
                                 <tbody>
                                     {% for p in league_payments %}
@@ -273,7 +275,7 @@
                 <div class="table-responsive">
                     <table class="table table-sm mb-0">
                         <thead class="table-light">
-                             <tr><th>Supplier</th><th>Invoice No</th><th>Amount</th><th>Reason</th><th>Time</th></tr>
+                            <tr><th>Supplier</th><th>Invoice No</th><th>Amount</th><th>Reason</th><th>Time</th></tr>
                         </thead>
                         <tbody>
                             {% for e in expenses %}
@@ -282,7 +284,7 @@
                                 <td>{{ e[2] }}</td>
                                 <td>R{{ e[3] }}</td>
                                 <td>{{ e[4] }}</td>
-                                <td>{{ e[5][:16] if e[5] else '' }}</td>
+                                <td>{{ e[5] }}</td>
                             </tr>
                             {% endfor %}
                         </tbody>
